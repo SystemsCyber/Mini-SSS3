@@ -3,6 +3,8 @@
 # Mini Smart Sensor Simulator 3 (Mini-SSS3)
 Repository to hold Mini-SSS3 code
 
+## Block Diagram
+![Block Diagram](./Mini-SSS3-Firmware/BlockDiagram.drawio.png)
 
 
 ## GUI Demo
