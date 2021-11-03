@@ -29,12 +29,13 @@ export default function PWM(props) {
   const SWChangeHandler = useCallback(({ target: { name, checked } }) => {
     // console.log("Switch Handler Inputs: ", name, checked);
     props.setPWMSwitch(name,checked)
+    props.post_pwm(name);
 
   });
 
   const ApplyHandler = useCallback(({ target: { name, checked } }) => {
     // console.log("Switch Handler Inputs: ", name, checked);
-    props.post_pwm();
+    props.post_pwm(name);
     
 
   });
@@ -85,6 +86,7 @@ export default function PWM(props) {
         />
         <Box sx={{ "& button": { m: 0 } }}>
           <Button
+            name={props.name}
             variant="contained"
             color="success"
             onClick={ApplyHandler}

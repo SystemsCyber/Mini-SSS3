@@ -274,12 +274,12 @@ class App extends React.Component {
       ledOn: false,
       tab: 0,
       pwm: {
-        pwm1: pwm1,
-        pwm2: pwm2,
-        pwm3: pwm3,
-        pwm4: pwm4,
-        pwm5: pwm5,
-        pwm6: pwm6,
+        "0": pwm1,
+        "1": pwm2,
+        "2": pwm3,
+        "3": pwm4,
+        "4": pwm5,
+        "5": pwm6,
         // {
         //   // duty: { value: 0, error: 0, helperText: "test" },
         //   // freq: { value: 0, error: 0, helperText: "test" },
@@ -378,7 +378,7 @@ class App extends React.Component {
   }
 
   setPWMDuty(name, duty) {
-    //console.log("Input of setPWMDuty", name, duty);
+    console.log("Input of setPWMDuty", name, duty);
     // //console.log("State:", this.state.pwm);
     let items = this.state.pwm;
     //console.log("Items:", items);
@@ -421,7 +421,7 @@ class App extends React.Component {
   }
 
   setPWMSwitch(name, value) {
-    //console.log("Input of setPWMSwitch", name, value);
+    // console.log("Input of setPWMSwitch", name, value);
     let items = this.state.pwm;
     //console.log("Items:", items);
     let item = { ...items[name] };
@@ -476,18 +476,18 @@ class App extends React.Component {
   }
 
   
-  async post_pwm() {
-    //console.log("input to post_pwm: ", this.state.pwm);
-
+  async post_pwm(name) {
+    // console.log("input to post_pwm: ", name);
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
-    var body = this.state.pwm;
-    var raw = JSON.stringify(body);
+    var pots_body = this.state.pwm[name];
+    var obj = {};
+    obj[name] = pots_body;
 
     var requestOptions = {
       method: "POST",
       headers: myHeaders,
-      body: raw,
+      body: JSON.stringify(obj),
       redirect: "follow",
     };
 
@@ -495,10 +495,6 @@ class App extends React.Component {
     let state = await response.json();
     //console.log(state);
     this.setPWMState_fromResponse(state);
-    // this.setState({
-    //   ledOn: state !== "0",
-    // });
-    //console.log(this.state);
   }
 
   // Pots 
@@ -545,6 +541,7 @@ class App extends React.Component {
       pots: items,
     });
   }
+
   async PostPots(name) {
     //console.log("input to post_pot: ", name);
 
@@ -737,8 +734,6 @@ class App extends React.Component {
   }
 
 
- 
-
   componentDidMount() {
     Promise.all([
       fetch("/led")
@@ -772,13 +767,7 @@ class App extends React.Component {
     
   }
 
-  async handleStateChange(ledOn) {
-    // //console.log("input to handleStateChange: ", ledOn);
-    this.setPWMDuty("pwm1", 48);
-    //console.log(this.state.pwm);
-  }
-
-  async handleStateChange2(event) {
+  async handleKeySwButton(event) {
     //console.log("input to handleStateChange2: ", event.target.checked);
 
     var myHeaders = new Headers();
@@ -842,17 +831,17 @@ class App extends React.Component {
             <Switch
               checked={this.state.ledOn}
               id="ledOn"
-              onChange={(event) => this.handleStateChange2(event)}
+              onChange={(event) => this.handleKeySwButton(event)}
             />
             <Typography>On</Typography>
           </Stack>
-          <Stack direction="row" spacing={1} alignItems="center">
+          {/* <Stack direction="row" spacing={1} alignItems="center">
             <Typography>Off</Typography>
             <MaterialUISwitch
               onChange={(event) => this.handleStateChange(event)}
             />
             <Typography>On</Typography>
-          </Stack>
+          </Stack> */}
 
           <Box sx={{ width: "100%" }}>
             <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
@@ -870,8 +859,8 @@ class App extends React.Component {
             </Box>
             <TabPanel value={this.state.tab} index={0}>
               <PWM
-                name="pwm1"
-                data={this.state.pwm.pwm1}
+                name="0"
+                data={this.state.pwm["0"]}
                 Title={"PWM1"}
                 setPWMSwitch={this.setPWMSwitch}
                 setPWMDuty={this.setPWMDuty}
@@ -880,8 +869,8 @@ class App extends React.Component {
                 post_pwm={this.post_pwm}
               />
               <PWM
-                name="pwm2"
-                data={this.state.pwm.pwm2}
+                name="1"
+                data={this.state.pwm["1"]}
                 Title={"PWM2"}
                 setPWMSwitch={this.setPWMSwitch}
                 setPWMDuty={this.setPWMDuty}
@@ -890,8 +879,8 @@ class App extends React.Component {
                 post_pwm={this.post_pwm}
               />
               <PWM
-                name="pwm3"
-                data={this.state.pwm.pwm3}
+                name="2"
+                data={this.state.pwm["2"]}
                 Title={"PWM3"}
                 setPWMSwitch={this.setPWMSwitch}
                 setPWMDuty={this.setPWMDuty}
@@ -900,8 +889,8 @@ class App extends React.Component {
                 post_pwm={this.post_pwm}
               />
               <PWM
-                name="pwm4"
-                data={this.state.pwm.pwm4}
+                name="3"
+                data={this.state.pwm["3"]}
                 Title={"PWM4"}
                 setPWMSwitch={this.setPWMSwitch}
                 setPWMDuty={this.setPWMDuty}
@@ -910,8 +899,8 @@ class App extends React.Component {
                 post_pwm={this.post_pwm}
               />
               <PWM
-                name="pwm5"
-                data={this.state.pwm.pwm5}
+                name="4"
+                data={this.state.pwm["4"]}
                 Title={"PWM5"}
                 setPWMSwitch={this.setPWMSwitch}
                 setPWMDuty={this.setPWMDuty}
@@ -920,8 +909,8 @@ class App extends React.Component {
                 post_pwm={this.post_pwm}
               />
               <PWM
-                name="pwm6"
-                data={this.state.pwm.pwm6}
+                name="5"
+                data={this.state.pwm["5"]}
                 Title={"PWM6"}
                 setPWMSwitch={this.setPWMSwitch}
                 setPWMDuty={this.setPWMDuty}

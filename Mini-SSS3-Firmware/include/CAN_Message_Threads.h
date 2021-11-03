@@ -731,30 +731,29 @@ void read_CAN_Gen(Request &req, Response &res)
     for (int j = 0; j < can_messages[i]->num_messages; j++)
     {
       uint8_t sub_index = j;
-      response[String(i)+String(j)]["ThreadName"] = can_messages[i]->ThreadName;
-      response[String(i)+String(j)]["ThreadID"] = i;
-      response[String(i)+String(j)]["enabled"] = can_messages[i]->enabled;
-      response[String(i)+String(j)]["num_messages"] = can_messages[i]->num_messages;
-      response[String(i)+String(j)]["message_index"] = sub_index;
-      response[String(i)+String(j)]["transmit_number"] = can_messages[i]->transmit_number;
-      response[String(i)+String(j)]["cycle_count"] = can_messages[i]->cycle_count;
-      response[String(i)+String(j)]["channel"] = can_messages[i]->channel;
-      response[String(i)+String(j)]["tx_period"] = can_messages[i]->tx_period;
-      response[String(i)+String(j)]["tx_delay"] = can_messages[i]->loop_cycles;
-      response[String(i)+String(j)]["stop_after_count"] = can_messages[i]->stop_after_count;
-      response[String(i)+String(j)]["extended"] = can_messages[i]->txmsg.flags.extended;
-      response[String(i)+String(j)]["ID"] = String(can_messages[i]->id_list[sub_index], HEX);
-      response[String(i)+String(j)]["DLC"] = can_messages[i]->txmsg.len;
+      response[String(i) + String(j)]["ThreadName"] = can_messages[i]->ThreadName;
+      response[String(i) + String(j)]["ThreadID"] = i;
+      response[String(i) + String(j)]["enabled"] = can_messages[i]->enabled;
+      response[String(i) + String(j)]["num_messages"] = can_messages[i]->num_messages;
+      response[String(i) + String(j)]["message_index"] = sub_index;
+      response[String(i) + String(j)]["transmit_number"] = can_messages[i]->transmit_number;
+      response[String(i) + String(j)]["cycle_count"] = can_messages[i]->cycle_count;
+      response[String(i) + String(j)]["channel"] = can_messages[i]->channel;
+      response[String(i) + String(j)]["tx_period"] = can_messages[i]->tx_period;
+      response[String(i) + String(j)]["tx_delay"] = can_messages[i]->loop_cycles;
+      response[String(i) + String(j)]["stop_after_count"] = can_messages[i]->stop_after_count;
+      response[String(i) + String(j)]["extended"] = can_messages[i]->txmsg.flags.extended;
+      response[String(i) + String(j)]["ID"] = String(can_messages[i]->id_list[sub_index], HEX);
+      response[String(i) + String(j)]["DLC"] = can_messages[i]->txmsg.len;
       // response[String(i)]["DATA"] = [];
       for (int k = 0; k < can_messages[i]->txmsg.len; k++)
       {
-        response[String(i)+String(j)]["DATA"][k] = String(can_messages[i]->message_list[sub_index][k], HEX);
+        response[String(i) + String(j)]["DATA"][k] = String(can_messages[i]->message_list[sub_index][k], HEX);
       }
     }
   }
   serializeJsonPretty(response, json);
-  if (true)
-    Serial.println("Size of Response: " + String(response.memoryUsage()));
+  Debug.print(DBG_DEBUG, "Size of Response: %d", response.memoryUsage());
   res.print(json);
 }
 
@@ -775,7 +774,7 @@ bool parse_response_can_gen_doc(uint8_t *buffer)
       Serial.print(F("deserializeJson() failed: "));
     if (DEBUG)
       // Serial.println(error.f_str());
-    return false;
+      return false;
   }
 
   return true;

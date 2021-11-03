@@ -1,7 +1,8 @@
 #define ARDUINO_ETHERNET_SHIELD
 #define BOARD_HAS_ECCX08
 #define ARDUINOJSON_ENABLE_PROGMEM 0
-
+#define DEBUGSERIAL
+#include "Arduino_DebugUtils.h"
 #include <Arduino.h>
 #include <SPI.h>
 #include <Ethernet.h>
@@ -17,7 +18,6 @@
 #include <ArduinoMqttClient.h>
 #include <arduino_secrets.h>
 #include <TimeLib.h>
-#include "Arduino_DebugUtils.h"
 
 time_t RTCTime;
 
@@ -26,6 +26,7 @@ time_t RTCTime;
 // Newer Ethernet shields have a MAC address printed on a sticker on the shield
 void publishMessage();
 void publishPots();
+void publishPWM();
 IPAddress ip(192, 168, 1, 177);
 
 EthernetServer server(80);
@@ -161,8 +162,8 @@ DynamicJsonDocument getStatus_PWM()
   for (int i = 0; i < numPWMs; i++)
   {
     response[String(i)]["duty"]["value"] = pwmValue[i];
-    response[String(i)]["frequency"]["value"] = pwmFrequency[i];
-    response[String(i)]["switch"]["value"] = 1;
+    response[String(i)]["freq"]["value"] = pwmFrequency[i];
+    response[String(i)]["sw"]["value"] = 1;
   }
   return response;
 }
@@ -187,7 +188,7 @@ void read_potentiometers(Request &req, Response &res)
   char json[2048];
   Debug.print(DBG_INFO, "Got GET Request for Potentiometers, returned: ");
   serializeJsonPretty(getStatus_Pots(), json);
-  Debug.print(DBG_DEBUG, json);
+  Debug.print(DBG_INFO, json);
   res.print(json);
 }
 
@@ -203,7 +204,7 @@ void read_pac1934(Request &req, Response &res)
 void read_PWM(Request &req, Response &res)
 {
   char json[2048];
-  Debug.print(DBG_DEBUG, "Got GET Request for PAC1934: ");
+  Debug.print(DBG_INFO, "Got GET Request for PAC1934: ");
   serializeJsonPretty(getStatus_PWM(), json);
   Debug.print(DBG_DEBUG, json);
   res.print(json);
@@ -218,7 +219,7 @@ void read_CAN(Request &req, Response &res)
   res.print(json);
 }
 
-uint8_t MCP41HVI2C_SetWiper(int pin, int potValue)
+uint8_t MCP41HV_SetWiper(int pin, int potValue)
 {
   digitalWrite(pin, LOW);
   SPI.transfer(0x00); //Write to wiper Register
@@ -229,7 +230,7 @@ uint8_t MCP41HVI2C_SetWiper(int pin, int potValue)
   return result;
 }
 
-uint8_t MCP41HVI2C_SetTerminals(uint8_t pin, uint8_t TCON_Value)
+uint8_t MCP41HV_SetTerminals(uint8_t pin, uint8_t TCON_Value)
 {
   digitalWrite(pin, LOW);
   SPI1.transfer(0x40); //Write to TCON Register
@@ -241,7 +242,7 @@ uint8_t MCP41HVI2C_SetTerminals(uint8_t pin, uint8_t TCON_Value)
   return result & 0x07;
 }
 
-void update_Pots(int idx, int value)
+void update_Pots(uint8_t idx, int value)
 {
   if (value > 256)
   {
@@ -261,8 +262,7 @@ void update_Pots(int idx, int value)
   }
   Debug.print(DBG_INFO, "Entered update_Pots function with idx: %d, value: %d: ", idx, value);
   SPIpotWiperSettings[idx] = value;
-  MCP41HVI2C_SetWiper(SPIpotCS[idx], value);
-
+  MCP41HV_SetWiper(SPIpotCS[idx], value);
 }
 
 void on_POST_Pots(Request &req, Response &res)
@@ -274,6 +274,7 @@ void on_POST_Pots(Request &req, Response &res)
   req.body(buff, sizeof(buff));
   if (!parse_response(buff))
   {
+    Debug.print(DBG_ERROR, "Not a valid Json Format");
     res.print("Not a valid Json Format");
   }
   else
@@ -300,8 +301,97 @@ void on_POST_Pots(Request &req, Response &res)
   }
 }
 
+void update_PWM(uint8_t idx, int duty, int freq)
+{
+  if (idx > numPWMs)
+  {
+    Debug.print(DBG_ERROR, "idx : %d is out of range of numPWMs: %d", idx, numPWMs);
+    return;
+  }
+  if (duty > 4096)
+  {
+    Debug.print(DBG_WARNING, "Duty: %d is out of bound setting it to 4096", duty);
+    duty = 4096;
+  }
+  else if (duty < 0)
+  {
+    Debug.print(DBG_WARNING, "Duty: %d is out of bound setting it to 0", duty);
+    duty = 0;
+  }
+  if (freq > 4096)
+  {
+    Debug.print(DBG_WARNING, "Frequency: %d is out of bound setting it to 4096", freq);
+    freq = 4096;
+  }
+  else if (freq < 0)
+  {
+    Debug.print(DBG_WARNING, "Frequency: %d is out of bound setting it to 0", freq);
+    freq = 0;
+}
+
+  Debug.print(DBG_INFO, "Entered update_PWM function with idx: %d, duty: %d, freq: %d: ", idx, duty, freq);
+  pwmValue[idx] = duty;
+  pwmFrequency[idx] = freq;
+  analogWrite(PWMPins[idx], duty);
+  analogWriteFrequency(PWMPins[idx], freq);
+}
+
 void on_POST_PWM(Request &req, Response &res)
 {
+  Debug.print(DBG_INFO, "Got POST Request for PWM: ");
+  doc.clear();
+  req.body(buff, sizeof(buff));
+  if (!parse_response(buff))
+  {
+    Debug.print(DBG_ERROR, "Not a valid Json Format");
+    res.print("Not a valid Json Format");
+  }
+  else
+  {
+    Debug.print(DBG_INFO, "Got POST Request for PWM");
+
+    if (doc["0"])
+    {
+      String duty = doc["0"]["duty"]["value"];
+      String freq = doc["0"]["freq"]["value"];
+      int sw = doc["0"]["sw"]["value"];
+      if(sw==1)
+        update_PWM(0, duty.toInt(), freq.toInt());
+      else
+        update_PWM(0, 0, 0);
+    }
+    if (doc["1"])
+    {
+      String duty = doc["1"]["duty"]["value"];
+      String freq = doc["1"]["freq"]["value"];
+      int sw = doc["1"]["sw"]["value"];
+      if(sw==1)
+        update_PWM(1, duty.toInt(), freq.toInt());
+      else
+        update_PWM(1, 0, 0);
+    }
+    if (doc["2"])
+    {
+      String duty = doc["2"]["duty"]["value"];
+      String freq = doc["2"]["freq"]["value"];
+      int sw = doc["2"]["sw"]["value"];
+      if(sw==1)
+        update_PWM(2, duty.toInt(), freq.toInt());
+      else
+        update_PWM(2, 0, 0);
+    }
+    if (doc["3"])
+    {
+      String duty = doc["3"]["duty"]["value"];
+      String freq = doc["3"]["freq"]["value"];
+      int sw = doc["3"]["sw"]["value"];
+      if(sw==1)
+        update_PWM(3, duty.toInt(), freq.toInt());
+      else
+        update_PWM(3, 0, 0);
+    }
+    publishPWM();
+  }
 }
 
 void connectMQTT()
@@ -430,6 +520,15 @@ void publishPAC()
   mqttClient.endMessage();
 }
 
+void publishPWM()
+{
+  mqttClient.beginMessage("$aws/things/mini-sss3-1/shadow/update");
+  StaticJsonDocument<2048> update;
+  update["state"]["reported"]["PWM"] = getStatus_PWM();
+  serializeJson(update, mqttClient);
+  mqttClient.endMessage();
+}
+
 void publishPots()
 {
   mqttClient.beginMessage("$aws/things/mini-sss3-1/shadow/update");
@@ -438,6 +537,7 @@ void publishPots()
   serializeJson(update, mqttClient);
   mqttClient.endMessage();
 }
+
 void setup()
 {
   setPinModes();
@@ -493,6 +593,8 @@ void setup()
   app.post("/led", &update_keySw);
   app.get("/pots", &read_potentiometers);
   app.post("/pots", &on_POST_Pots);
+  app.get("/pwm", &read_PWM);
+  app.post("/pwm", &on_POST_PWM);
   app.get("/voltage", &read_pac1934);
   app.get("/can", &read_CAN);
   app.get("/cangen", &read_CAN_Gen);
