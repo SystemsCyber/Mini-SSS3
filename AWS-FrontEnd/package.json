@@ -1,0 +1,51 @@
+{
+  "name": "led-blink",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.4.1",
+    "@emotion/styled": "^11.3.0",
+    "@material-ui/icons": "^4.11.2",
+    "@material-ui/lab": "^4.0.0-alpha.60",
+    "@mui/icons-material": "^5.0.4",
+    "@mui/material": "^5.0.4",
+    "@mui/styles": "^5.0.1",
+    "@mui/x-data-grid": "^5.0.0-beta.4",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
+    "react-scripts": "2.1.8",
+    "react-swipeable-views": "^0.14.0",
+    "react-toggle-button": "^2.2.0",
+    "uuid": "^8.3.2",
+    "uuid-int": "^3.1.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "dist": "awot-static"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
+  "devDependencies": {
+    "awot-scripts": "0.0.28"
+  },
+  "proxy": "http://192.168.137.81/",
+  "awot-static": {
+    "sources": "./build",
+    "indexFile": "index.html",
+    "sketchDir": "../Mini-SSS3-Firmware/include/",
+    "exclude": [
+      "*.map",
+      "service-worker.js"
+    ]
+  }
+}

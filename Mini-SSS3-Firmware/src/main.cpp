@@ -18,7 +18,7 @@
 #include <ArduinoMqttClient.h>
 #include <arduino_secrets.h>
 #include <TimeLib.h>
-
+#include <cryptoauthlib.h>
 time_t RTCTime;
 
 // extern void reloadCAN();
@@ -126,15 +126,8 @@ void update_keySw(Request &req, Response &res)
   {
     bool state = doc["ledOn"];
     set_keySw(state);
-
-    // commandPrefix = "50";
-    // if (ignitionCtlState)
-    //   commandString = "1";
-    // else
-    //   commandString = "0";
-    // fastSetSetting();
     mqttClient.beginMessage("$aws/things/mini-sss3-1/shadow/update");
-    StaticJsonDocument<2048> update;
+    StaticJsonDocument<256> update;
     update["state"]["reported"]["KeyOn"]["value"] = state;
     serializeJson(update, mqttClient);
     mqttClient.endMessage();
@@ -327,7 +320,7 @@ void update_PWM(uint8_t idx, int duty, int freq)
   {
     Debug.print(DBG_WARNING, "Frequency: %d is out of bound setting it to 0", freq);
     freq = 0;
-}
+  }
 
   Debug.print(DBG_INFO, "Entered update_PWM function with idx: %d, duty: %d, freq: %d: ", idx, duty, freq);
   pwmValue[idx] = duty;
@@ -355,7 +348,7 @@ void on_POST_PWM(Request &req, Response &res)
       String duty = doc["0"]["duty"]["value"];
       String freq = doc["0"]["freq"]["value"];
       int sw = doc["0"]["sw"]["value"];
-      if(sw==1)
+      if (sw == 1)
         update_PWM(0, duty.toInt(), freq.toInt());
       else
         update_PWM(0, 0, 0);
@@ -365,7 +358,7 @@ void on_POST_PWM(Request &req, Response &res)
       String duty = doc["1"]["duty"]["value"];
       String freq = doc["1"]["freq"]["value"];
       int sw = doc["1"]["sw"]["value"];
-      if(sw==1)
+      if (sw == 1)
         update_PWM(1, duty.toInt(), freq.toInt());
       else
         update_PWM(1, 0, 0);
@@ -375,7 +368,7 @@ void on_POST_PWM(Request &req, Response &res)
       String duty = doc["2"]["duty"]["value"];
       String freq = doc["2"]["freq"]["value"];
       int sw = doc["2"]["sw"]["value"];
-      if(sw==1)
+      if (sw == 1)
         update_PWM(2, duty.toInt(), freq.toInt());
       else
         update_PWM(2, 0, 0);
@@ -385,7 +378,7 @@ void on_POST_PWM(Request &req, Response &res)
       String duty = doc["3"]["duty"]["value"];
       String freq = doc["3"]["freq"]["value"];
       int sw = doc["3"]["sw"]["value"];
-      if(sw==1)
+      if (sw == 1)
         update_PWM(3, duty.toInt(), freq.toInt());
       else
         update_PWM(3, 0, 0);
@@ -605,6 +598,12 @@ void setup()
   reloadCAN();
   delay(100);
   stopCAN();
+  Serial.println("atca_delay_us");
+  atca_delay_us(100);
+  Serial.println("Running cfg_ateccx08a_i2c_default");
+  atcab_init(&cfg_ateccx08a_i2c_default);
+  // atcab_init(&cfg);
+  Serial.println("Finished");
 }
 
 void loop()
@@ -624,8 +623,16 @@ void loop()
   if (millis() - lastMillis > 5000)
   {
     lastMillis = millis();
-    publishPAC();
+    // publishPAC();
     // publishMessage();
+    // atcab_get_device_address();
+    Serial.print("Calling atcab_get_device_address: ");
+    Serial.println(atcab_get_device_address(atcab_get_device()));
+    char ver[20];
+    atcab_version(ver);
+    Serial.print("Calling atcab_version: ");
+    Serial.println(ver);
+    // cfg_ateccx08a_i2c_default
   }
 
   if (client.connected())

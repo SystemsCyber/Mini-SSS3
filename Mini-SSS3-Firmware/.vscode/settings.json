@@ -19,6 +19,15 @@
         "aiotc_config.h": "c",
         "timelib.h": "c",
         "time.h": "c",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "functional": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "*.temp": "cpp",
+        "arduino.h": "c",
+        "atca_helpers.h": "c",
+        "cryptoauthlib.h": "c",
+        "wprogram.h": "c",
+        "usb_serial.h": "c"
     }
 }
