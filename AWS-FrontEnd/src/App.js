@@ -1,6 +1,8 @@
 // import {Component} from 'react';
 import * as React from "react";
 import "./App.css";
+import { withAuthenticator } from '@aws-amplify/ui-react';
+
 import { Switch } from "@mui/material";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -753,15 +755,15 @@ class App extends React.Component {
         // .then((state) => console.log(state)),
         .then((state) => this.setCANGenState_fromResponse(state)),
     ]);
-    const interval = setInterval(() => {
-      this.read_voltage();
-    }, 500);
-    const can_interval = setInterval(() => {
-      this.read_CAN();
-    }, 100);
-    const can_gen_interval = setInterval(() => {
-      this.read_CAN_Gen();
-    }, 1000);
+    // const interval = setInterval(() => {
+    //   this.read_voltage();
+    // }, 500);
+    // const can_interval = setInterval(() => {
+    //   this.read_CAN();
+    // }, 100);
+    // const can_gen_interval = setInterval(() => {
+    //   this.read_CAN_Gen();
+    // }, 1000);
 
 
     
@@ -966,4 +968,4 @@ class App extends React.Component {
   }
 }
 
-export default App;
+export default withAuthenticator(App);

@@ -5,7 +5,8 @@ import App from './App';
 import { StyledEngineProvider } from '@mui/material/styles';
 
 import * as serviceWorker from './serviceWorker';
-
+import Amplify from "aws-amplify";
+import awsExports from "./aws-exports";
 // ReactDOM.render(<TabPanel />, document.getElementById('root'));
 
 ReactDOM.render (

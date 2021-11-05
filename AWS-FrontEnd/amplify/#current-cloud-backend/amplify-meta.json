@@ -1,0 +1,15 @@
+{
+  "providers": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-mini-sss3-aws-frontend-dev-12829-authRole",
+      "UnauthRoleArn": "arn:aws:iam::096696900030:role/amplify-mini-sss3-aws-frontend-dev-12829-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::096696900030:role/amplify-mini-sss3-aws-frontend-dev-12829-authRole",
+      "Region": "us-west-1",
+      "DeploymentBucketName": "amplify-mini-sss3-aws-frontend-dev-12829-deployment",
+      "UnauthRoleName": "amplify-mini-sss3-aws-frontend-dev-12829-unauthRole",
+      "StackName": "amplify-mini-sss3-aws-frontend-dev-12829",
+      "StackId": "arn:aws:cloudformation:us-west-1:096696900030:stack/amplify-mini-sss3-aws-frontend-dev-12829/fac190a0-3e09-11ec-a1f9-06dd57c40213",
+      "AmplifyAppId": "d265kfqo64y1dn"
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "providers": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-mini-sss3-aws-frontend-dev-12829-authRole",
+      "UnauthRoleArn": "arn:aws:iam::096696900030:role/amplify-mini-sss3-aws-frontend-dev-12829-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::096696900030:role/amplify-mini-sss3-aws-frontend-dev-12829-authRole",
+      "Region": "us-west-1",
+      "DeploymentBucketName": "amplify-mini-sss3-aws-frontend-dev-12829-deployment",
+      "UnauthRoleName": "amplify-mini-sss3-aws-frontend-dev-12829-unauthRole",
+      "StackName": "amplify-mini-sss3-aws-frontend-dev-12829",
+      "StackId": "arn:aws:cloudformation:us-west-1:096696900030:stack/amplify-mini-sss3-aws-frontend-dev-12829/fac190a0-3e09-11ec-a1f9-06dd57c40213",
+      "AmplifyAppId": "d265kfqo64y1dn"
+    }
+  },
+  "iotpubsub": {
+    "iotpolicy": {
+      "service": "IoT-Message-Viewer",
+      "providerPlugin": "awscloudformation"
+    }
+  },
+  "auth": {
+    "userPoolGroups": {
+      "service": "Cognito-UserPool-Groups",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [
+        {
+          "category": "auth",
+          "resourceName": "awstoolkitd5af8046d5af8046",
+          "attributes": [
+            "UserPoolId",
+            "AppClientIDWeb",
+            "AppClientID",
+            "IdentityPoolId"
+          ]
+        }
+      ]
+    },
+    "awstoolkitd5af8046d5af8046": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false,
+      "frontendAuthConfig": {
+        "loginMechanisms": [
+          "PREFERRED_USERNAME"
+        ],
+        "signupAttributes": [
+          "EMAIL"
+        ],
+        "passwordProtectionSettings": {
+          "passwordPolicyMinLength": 8,
+          "passwordPolicyCharacters": []
+        },
+        "mfaConfiguration": "OPTIONAL",
+        "mfaTypes": [
+          "SMS"
+        ],
+        "verificationMechanisms": [
+          "EMAIL"
+        ]
+      }
+    }
+  }
+}
