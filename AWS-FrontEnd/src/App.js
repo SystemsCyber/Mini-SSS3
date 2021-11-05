@@ -2,8 +2,8 @@
 import * as React from "react";
 import "./App.css";
 import { withAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react'
-import Amplify from 'aws-amplify';
-import aws_exports from './aws-exports';
+import Amplify, { Auth } from 'aws-amplify';
+import awsconfig from './aws-exports';
 
 import { Switch } from "@mui/material";
 import Stack from "@mui/material/Stack";
@@ -32,7 +32,8 @@ import {
 } from "./data";
 import CAN_Gen_Table from "./CAN_Gen_Table";
 import { v4 as uuidv4 } from "uuid";
-Amplify.configure(aws_exports);
+Amplify.configure(awsconfig);
+Auth.configure(awsconfig);
 
 const UUID = require('uuid-int');
 const generator = UUID(0);
