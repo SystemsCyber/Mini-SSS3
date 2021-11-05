@@ -623,7 +623,7 @@ void loop()
   if (millis() - lastMillis > 5000)
   {
     lastMillis = millis();
-    // publishPAC();
+    publishPAC();
     // publishMessage();
     // atcab_get_device_address();
 

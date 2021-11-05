@@ -1,9 +1,9 @@
 // import {Component} from 'react';
 import * as React from "react";
 import "./App.css";
-import { withAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react'
-import Amplify, { Auth } from 'aws-amplify';
-import awsconfig from './aws-exports';
+import { withAuthenticator, AmplifySignOut } from "@aws-amplify/ui-react";
+import Amplify, { Auth } from "aws-amplify";
+import awsconfig from "./aws-exports";
 
 import { Switch } from "@mui/material";
 import Stack from "@mui/material/Stack";
@@ -18,7 +18,8 @@ import Box from "@mui/material/Box";
 import PWM from "./PWM";
 import Pot from "./Pot";
 import CAN_Table from "./CAN_Table";
-
+import UserInfo from "./components/widgets/user-info";
+import EventViewer from "./components/widgets/iot-message-viewer";
 import {
   PWMD,
   Duty,
@@ -35,7 +36,7 @@ import { v4 as uuidv4 } from "uuid";
 Amplify.configure(awsconfig);
 Auth.configure(awsconfig);
 
-const UUID = require('uuid-int');
+const UUID = require("uuid-int");
 const generator = UUID(0);
 
 function TabPanel(props) {
@@ -281,12 +282,12 @@ class App extends React.Component {
       ledOn: false,
       tab: 0,
       pwm: {
-        "0": pwm1,
-        "1": pwm2,
-        "2": pwm3,
-        "3": pwm4,
-        "4": pwm5,
-        "5": pwm6,
+        0: pwm1,
+        1: pwm2,
+        2: pwm3,
+        3: pwm4,
+        4: pwm5,
+        5: pwm6,
         // {
         //   // duty: { value: 0, error: 0, helperText: "test" },
         //   // freq: { value: 0, error: 0, helperText: "test" },
@@ -319,10 +320,10 @@ class App extends React.Component {
         // },
       },
       pots: {
-        "0": pot1,
-        "1": pot2,
-        "2": pot3,
-        "3": pot4,
+        0: pot1,
+        1: pot2,
+        2: pot3,
+        3: pot4,
       },
       can_rows: [],
       can_gen: {},
@@ -482,7 +483,6 @@ class App extends React.Component {
     }
   }
 
-  
   async post_pwm(name) {
     // console.log("input to post_pwm: ", name);
     var myHeaders = new Headers();
@@ -504,7 +504,7 @@ class App extends React.Component {
     this.setPWMState_fromResponse(state);
   }
 
-  // Pots 
+  // Pots
   setPotState_fromResponse(state) {
     //console.log("input of setPotState from response", state);
     let items = this.state.pots;
@@ -740,7 +740,6 @@ class App extends React.Component {
     // });
   }
 
-
   componentDidMount() {
     Promise.all([
       fetch("/led")
@@ -769,9 +768,6 @@ class App extends React.Component {
     // const can_gen_interval = setInterval(() => {
     //   this.read_CAN_Gen();
     // }, 1000);
-
-
-    
   }
 
   async handleKeySwButton(event) {
@@ -862,6 +858,7 @@ class App extends React.Component {
                 <Tab label="Potentiometer" {...a11yProps(1)} />
                 <Tab label="CAN" {...a11yProps(2)} />
                 <Tab label="CAN Message Generator" {...a11yProps(3)} />
+                <Tab label="Debug" {...a11yProps(4)} />
               </Tabs>
             </Box>
             <TabPanel value={this.state.tab} index={0}>
@@ -965,6 +962,10 @@ class App extends React.Component {
                 setCANCell={this.setCANCell}
                 PostCANRow={this.PostCANRow}
               ></CAN_Gen_Table>
+            </TabPanel>
+            <TabPanel value={this.state.tab} index={4}>
+              <UserInfo />
+              <EventViewer />
             </TabPanel>
           </Box>
         </body>
