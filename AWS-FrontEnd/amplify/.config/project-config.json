@@ -2,7 +2,7 @@
   "providers": [
     "awscloudformation"
   ],
-  "projectName": "Mini-SSS3-AWS-FrontEnd",
+  "projectName": "awstoolkit",
   "version": "3.0",
   "frontend": "javascript",
   "javascript": {
