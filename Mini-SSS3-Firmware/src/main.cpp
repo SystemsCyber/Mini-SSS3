@@ -18,7 +18,7 @@
 #include <ArduinoMqttClient.h>
 #include <arduino_secrets.h>
 #include <TimeLib.h>
-#include <cryptoauthlib.h>
+// #include <cryptoauthlib.h>
 time_t RTCTime;
 
 // extern void reloadCAN();
@@ -598,12 +598,12 @@ void setup()
   reloadCAN();
   delay(100);
   stopCAN();
-  Serial.println("atca_delay_us");
-  atca_delay_us(100);
-  Serial.println("Running cfg_ateccx08a_i2c_default");
-  atcab_init(&cfg_ateccx08a_i2c_default);
+  // Serial.println("atca_delay_us");
+  // atca_delay_us(100);
+  // Serial.println("Running cfg_ateccx08a_i2c_default");
+  // atcab_init(&cfg_ateccx08a_i2c_default);
   // atcab_init(&cfg);
-  Serial.println("Finished");
+  // Serial.println("Finished");
 }
 
 void loop()
@@ -626,13 +626,15 @@ void loop()
     // publishPAC();
     // publishMessage();
     // atcab_get_device_address();
-    Serial.print("Calling atcab_get_device_address: ");
-    Serial.println(atcab_get_device_address(atcab_get_device()));
-    char ver[20];
-    atcab_version(ver);
-    Serial.print("Calling atcab_version: ");
-    Serial.println(ver);
-    // cfg_ateccx08a_i2c_default
+
+    
+    // Serial.print("Calling atcab_get_device_address: ");
+    // Serial.println(atcab_get_device_address(atcab_get_device()));
+    // char ver[20];
+    // atcab_version(ver);
+    // Serial.print("Calling atcab_version: ");
+    // Serial.println(ver);
+    // // cfg_ateccx08a_i2c_default
   }
 
   if (client.connected())
