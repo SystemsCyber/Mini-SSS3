@@ -12,7 +12,7 @@
       "dependsOn": [
         {
           "category": "auth",
-          "resourceName": "awstoolkitd5af8046d5af8046",
+          "resourceName": "cognitocf0c6096_identitypool_cf0c6096",
           "attributes": [
             "UserPoolId",
             "AppClientIDWeb",
@@ -22,7 +22,7 @@
         }
       ]
     },
-    "awstoolkitd5af8046d5af8046": {
+    "cognitocf0c6096_identitypool_cf0c6096": {
       "service": "Cognito",
       "providerPlugin": "awscloudformation",
       "dependsOn": [],
