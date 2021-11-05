@@ -1,32 +1,8 @@
 {
-  "iotpubsub": {
-    "iotpolicy": {
-      "service": "IoT-Message-Viewer",
-      "providerPlugin": "awscloudformation"
-    }
-  },
-  "auth": {
-    "userPoolGroups": {
-      "service": "Cognito-UserPool-Groups",
-      "providerPlugin": "awscloudformation",
-      "dependsOn": [
-        {
-          "category": "auth",
-          "resourceName": "cognitocf0c6096_identitypool_cf0c6096",
-          "attributes": [
-            "UserPoolId",
-            "AppClientIDWeb",
-            "AppClientID",
-            "IdentityPoolId"
-          ]
-        }
-      ]
-    },
-    "cognitocf0c6096_identitypool_cf0c6096": {
-      "service": "Cognito",
-      "providerPlugin": "awscloudformation",
-      "dependsOn": [],
-      "customAuth": false
-    }
-  }
+	"auth": {
+		"cognitocf0c6096": {
+			"service": "Cognito",
+			"providerPlugin": "awscloudformation"
+		}
+	}
 }
