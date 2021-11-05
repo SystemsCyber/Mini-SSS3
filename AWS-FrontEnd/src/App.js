@@ -1,7 +1,10 @@
 // import {Component} from 'react';
 import * as React from "react";
 import "./App.css";
-import { withAuthenticator } from '@aws-amplify/ui-react';
+import { withAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react'
+import Amplify from 'aws-amplify';
+import aws_exports from './aws-exports';
+Amplify.configure(aws_exports);
 
 import { Switch } from "@mui/material";
 import Stack from "@mui/material/Stack";
