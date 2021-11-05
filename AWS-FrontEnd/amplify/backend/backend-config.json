@@ -4,5 +4,11 @@
 			"service": "Cognito",
 			"providerPlugin": "awscloudformation"
 		}
-	}
+	},
+	"iotpubsub": {
+		"iotpolicy": {
+		  "service": "IoT-Message-Viewer",
+		  "providerPlugin": "awscloudformation"
+		}
+	  }
 }
