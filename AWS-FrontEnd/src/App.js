@@ -964,6 +964,7 @@ class App extends React.Component {
               ></CAN_Gen_Table>
             </TabPanel>
             <TabPanel value={this.state.tab} index={4}>
+              <AmplifySignOut />
               <UserInfo />
               <EventViewer />
             </TabPanel>

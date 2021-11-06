@@ -12,7 +12,7 @@ import awsExports from "../../aws-exports";
 const LOCAL_STORAGE_KEY = 'iot-widget';
 
 const state = store({
-  iotPolicy: 'AllowEverything-Mini-SSS3',     // This policy is created by this Amplify project; you don't need to change this unless you want to use a different policy.  
+  iotPolicy: 'amplify-toolkit-iot-message-viewer',     // This policy is created by this Amplify project; you don't need to change this unless you want to use a different policy.  
   iotEndpoint: null,              // We retrieve this when the component first loads
   message_history_limit: 200,
   message_count: 0,
@@ -108,6 +108,7 @@ async function getIoTEndpoint() {
   // Each AWS account has a unique IoT endpoint per region. We need to retrieve this value: 
   console.log('Getting IoT Endpoint...');
   const credentials = await Auth.currentCredentials();
+  console.log(credentials);
   const iot = new AWS.Iot({
     region: awsExports.aws_project_region,
     credentials: Auth.essentialCredentials(credentials)
@@ -120,6 +121,7 @@ async function getIoTEndpoint() {
 
 
 async function configurePubSub() {
+  console.log('configurePubSub.');
 
   if (!state.iotProviderConfigured) {
     console.log(`Configuring Amplify PubSub, region = ${awsExports.aws_project_region}, endpoint = ${state.iotEndpoint}`);
@@ -177,6 +179,7 @@ function updateState(key, value) {
 function handleReceivedMessage(data) {
 
   // Received messages contain the topic name in a Symbol that we have to decode: 
+  console.log("Entered Receive Message")
   const symbolKey = Reflect.ownKeys(data.value).find(key => key.toString() === 'Symbol(topic)');
   const publishedTopic = data.value[symbolKey];
   const message = JSON.stringify(data.value, null, 2);
