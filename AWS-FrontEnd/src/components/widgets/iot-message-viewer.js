@@ -195,7 +195,7 @@ function handleReceivedMessage(data) {
     state.message_count += 1;
   }
   const timestamp = new Date().toISOString();
-  state.messages.push(`${timestamp} - topic '${publishedTopic}':\n ${message}\n\n`);
+  state.messages.unshift(`${timestamp} - topic '${publishedTopic}':\n ${message}\n\n`);
 }
 
 //------------------------------------------------------------------------------
