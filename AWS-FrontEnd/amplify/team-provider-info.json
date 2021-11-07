@@ -1,19 +1,25 @@
 {
-  "bernardine": {
+  "carena": {
     "awscloudformation": {
-      "AuthRoleName": "amplify-authcra-bernardine-203956-authRole",
-      "UnauthRoleArn": "arn:aws:iam::096696900030:role/amplify-authcra-bernardine-203956-unauthRole",
-      "AuthRoleArn": "arn:aws:iam::096696900030:role/amplify-authcra-bernardine-203956-authRole",
+      "AuthRoleName": "amplify-minisss3awsfrontend-carena-44748-authRole",
+      "UnauthRoleArn": "arn:aws:iam::096696900030:role/amplify-minisss3awsfrontend-carena-44748-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::096696900030:role/amplify-minisss3awsfrontend-carena-44748-authRole",
       "Region": "us-west-1",
-      "DeploymentBucketName": "amplify-authcra-bernardine-203956-deployment",
-      "UnauthRoleName": "amplify-authcra-bernardine-203956-unauthRole",
-      "StackName": "amplify-authcra-bernardine-203956",
-      "StackId": "arn:aws:cloudformation:us-west-1:096696900030:stack/amplify-authcra-bernardine-203956/89e02ad0-3e78-11ec-aef5-06124b50ac11",
-      "AmplifyAppId": "d74u1qbkaxjj0"
+      "DeploymentBucketName": "amplify-minisss3awsfrontend-carena-44748-deployment",
+      "UnauthRoleName": "amplify-minisss3awsfrontend-carena-44748-unauthRole",
+      "StackName": "amplify-minisss3awsfrontend-carena-44748",
+      "StackId": "arn:aws:cloudformation:us-west-1:096696900030:stack/amplify-minisss3awsfrontend-carena-44748/b132c130-3ebc-11ec-92b1-06e97f33868d",
+      "AmplifyAppId": "dalv93leipvmw"
     },
     "categories": {
       "auth": {
         "cognitocf0c6096": {}
+      },
+      "function": {
+        "addIotPolicyToFederatedUser": {
+          "deploymentBucketName": "amplify-minisss3awsfrontend-carena-44748-deployment",
+          "s3Key": "amplify-builds/addIotPolicyToFederatedUser-622b63392f3551644f38-build.zip"
+        }
       }
     }
   }

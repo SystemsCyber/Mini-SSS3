@@ -147,7 +147,8 @@ async function attachIoTPolicyToUser() {
 
   var userInfo = await Auth.currentUserInfo({bypassCache: true});
   var iotPolicyIsAttached = userInfo.attributes[IOT_ATTRIBUTE_FLAG] === "true";
-
+console.log(userInfo);
+console.log(iotPolicyIsAttached);
   if (!iotPolicyIsAttached) {
 
     const apiName = 'amplifytoolkit';
@@ -186,7 +187,9 @@ function handleReceivedMessage(data) {
 
   console.log(`Message received on ${publishedTopic}:\n ${message}`);
   if (state.message_count >= state.message_history_limit) {
-    state.messages.shift();
+    // state.messages.shift();
+    state.messages.pop();
+
   }
   else {
     state.message_count += 1;

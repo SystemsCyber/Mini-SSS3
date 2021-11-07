@@ -1,14 +1,38 @@
 {
-	"auth": {
-		"cognitocf0c6096": {
-			"service": "Cognito",
-			"providerPlugin": "awscloudformation"
-		}
-	},
-	"iotpubsub": {
-		"iotpolicy": {
-		  "service": "IoT-Message-Viewer",
-		  "providerPlugin": "awscloudformation"
-		}
-	  }
+  "auth": {
+    "cognitocf0c6096": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation"
+    }
+  },
+  "iotpubsub": {
+    "iotpolicy": {
+      "service": "IoT-Message-Viewer",
+      "providerPlugin": "awscloudformation"
+    }
+  },
+  "function": {
+    "addIotPolicyToFederatedUser": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda",
+      "dependsOn": []
+    }
+  },
+  "api": {
+    "amplifytoolkit": {
+      "service": "API Gateway",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [
+        {
+          "category": "function",
+          "resourceName": "addIotPolicyToFederatedUser",
+          "attributes": [
+            "Name",
+            "Arn"
+          ]
+        }
+      ]
+    }
+  }
 }
