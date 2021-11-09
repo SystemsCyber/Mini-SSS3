@@ -826,6 +826,9 @@ class App extends React.Component {
           </Stack>
         </header>
         <body className="App">
+        <Stack direction="row" spacing={1} alignItems="center">
+          Key Switch
+        </Stack>
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography>Off</Typography>
             <Switch

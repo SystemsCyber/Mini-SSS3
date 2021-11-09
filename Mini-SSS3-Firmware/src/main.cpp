@@ -165,6 +165,7 @@ DynamicJsonDocument getStatus_PAC()
 {
   DynamicJsonDocument response(2048);
   PAC.UpdateVoltage();
+
   response["0"]["voltage"] = PAC.Voltage1 / 1000;
   response["0"]["current"] = -1;
   response["1"]["voltage"] = PAC.Voltage2 / 1000;
@@ -173,6 +174,7 @@ DynamicJsonDocument getStatus_PAC()
   response["2"]["current"] = -1;
   response["3"]["voltage"] = PAC.Voltage3 / 1000;
   response["3"]["current"] = -1;
+
   return response;
 }
 
@@ -190,7 +192,6 @@ void read_pac1934(Request &req, Response &res)
   char json[2048];
   Debug.print(DBG_DEBUG, "Got GET Request for PAC1934: ");
   serializeJsonPretty(getStatus_PAC(), json);
-  // Debug.print(DBG_DEBUG, json);
   res.print(json);
 }
 
@@ -453,6 +454,8 @@ void onMessageReceived(int messageSize)
           JsonObject Pots = kw.value().as<JsonObject>();
           for (JsonPair kp : Pots)
           {
+            Debug.print(DBG_INFO, "Entered 2nd for loop");
+
             JsonObject Pot = kp.value().as<JsonObject>();
             uint8_t val = Pot["wiper"]["value"];
             Debug.print(DBG_INFO, "got Wiper value: %d for pot%s", val, kp.key().c_str());
@@ -495,13 +498,14 @@ void publishMessage()
   update.clear();
   update["state"]["reported"]["PAC"] = getStatus_PAC();
   serializeJson(update, mqttClient);
+
   mqttClient.endMessage();
 
-  mqttClient.beginMessage("$aws/things/mini-sss3-1/shadow/update");
-  update.clear();
-  update["state"]["reported"]["KeyOn"]["value"] = ignitionCtlState;
-  serializeJson(update, mqttClient);
-  mqttClient.endMessage();
+  // mqttClient.beginMessage("$aws/things/mini-sss3-1/shadow/update");
+  // update.clear();
+  // update["state"]["reported"]["KeyOn"]["value"] = ignitionCtlState;
+  // serializeJson(update, mqttClient);
+  // mqttClient.endMessage();
 }
 
 void publishPAC()
@@ -510,6 +514,8 @@ void publishPAC()
   StaticJsonDocument<2048> update;
   update["state"]["reported"]["PAC"] = getStatus_PAC();
   serializeJson(update, mqttClient);
+  serializeJsonPretty(getStatus_PAC(), Serial);
+
   mqttClient.endMessage();
 }
 
@@ -531,13 +537,21 @@ void publishPots()
   mqttClient.endMessage();
 }
 
+void publishIP()
+{
+  mqttClient.beginMessage("$aws/things/mini-sss3-1/shadow/update");
+  StaticJsonDocument<2048> update;
+  update["state"]["reported"]["IP"] = Ethernet.localIP();
+  serializeJson(update, mqttClient);
+  mqttClient.endMessage();
+}
 void setup()
 {
   setPinModes();
   Wire.begin();
   SPI.begin();
   Debug.setDebugLevel(DBG_INFO);
-
+  PAC.begin();
   // Get burned in MAC address
   byte mac[6];
   for (uint8_t by = 0; by < 2; by++)
@@ -604,6 +618,8 @@ void setup()
   // atcab_init(&cfg_ateccx08a_i2c_default);
   // atcab_init(&cfg);
   // Serial.println("Finished");
+  publishMessage();
+  publishIP();
 }
 
 void loop()
@@ -624,10 +640,11 @@ void loop()
   {
     lastMillis = millis();
     publishPAC();
+    // publishIP();
+
     // publishMessage();
     // atcab_get_device_address();
 
-    
     // Serial.print("Calling atcab_get_device_address: ");
     // Serial.println(atcab_get_device_address(atcab_get_device()));
     // char ver[20];

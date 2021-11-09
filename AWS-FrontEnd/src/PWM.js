@@ -1,20 +1,9 @@
 import * as React from "react";
-import { useState, useCallback } from "react";
-import { styled } from "@mui/material/styles";
-// import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-// import Grid from "@mui/material/Grid";
+import { useCallback } from "react";
 import Stack from "@mui/material/Stack";
 import { useEffect } from "react";
-// import { typography } from "@mui/system";
 import { Switch, Button, TextField,Box,Typography } from "@mui/material";
 
-const Item = styled(Paper)(({ theme }) => ({
-  ...theme.typography.body1,
-  padding: theme.spacing(1),
-  textAlign: "center",
-  color: theme.palette.text.secondary,
-}));
 
 export default function PWM(props) {
   const DCChangeHandler = useCallback(({ target: { name, value } }) => {
@@ -43,7 +32,6 @@ export default function PWM(props) {
   useEffect(() => {
     // console.log(props.data);
   });
-  const DC_desc = "Duty Cycle";
   return (
     <div>
       <Stack

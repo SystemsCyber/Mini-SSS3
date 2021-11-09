@@ -4,14 +4,14 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SecurityIcon from '@mui/icons-material/Security';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import { useEffect , useCallback} from "react";
-import Button from '@mui/material/Button';
+// import Button from '@mui/material/Button';
 
 
 
-export default function CAN_Gen_Table(props) {
+export default function CanGenTable(props) {
   useEffect(() => {
     // console.log(props.data);
-    var can_gen_rows = Object.values(props.data);
+    // var can_gen_rows = Object.values(props.data);
   });
 
   const cellHandler = useCallback((params) => {
@@ -99,55 +99,55 @@ const columns = [
 //   },
 ];
 
-const rows = [
-  {
-    id: 1,
-    name: "test_name",
-    age: 25,
-    thread: 1,
-    count: 100,
-    index: 1,
-    send: 0,
-    channel: 1,
-    period: 100,
-    restart: 0,
-    total: 1000,
-    tx_count: 100,
-    can_id: 0xDEAD,
-    dlc: 1,
-    b0: 1,
-    b1: 1,
-    b2: 1,
-    b3: 1,
-    b4: 1,
-    b5: 1,
-    b6: 1,
-    b7: 1,
-    thread_name: "test_thread_name",
-  },
-  {
-    id: 2,
-  ThreadID:1,
-  enable:1,
-  ThreadName:1,
-  num_messages:1,
-  message_index:1,
-  transmit_number:1,
-  cycle_count:1,
-  channel:1,
-  tx_period:1,
-  tx_delay:1,
-  stop_after_count:1,
-  extended:1,
-  ID:1,
-  DLC:1,
-  B0:1,
-  B1:1,
-  B2:1,
-  B3:1,
-  B4:1,
-  B5:1,
-  B6:1,
-  B7:1
-  }
-];
+// const rows = [
+//   {
+//     id: 1,
+//     name: "test_name",
+//     age: 25,
+//     thread: 1,
+//     count: 100,
+//     index: 1,
+//     send: 0,
+//     channel: 1,
+//     period: 100,
+//     restart: 0,
+//     total: 1000,
+//     tx_count: 100,
+//     can_id: 0xDEAD,
+//     dlc: 1,
+//     b0: 1,
+//     b1: 1,
+//     b2: 1,
+//     b3: 1,
+//     b4: 1,
+//     b5: 1,
+//     b6: 1,
+//     b7: 1,
+//     thread_name: "test_thread_name",
+//   },
+//   {
+//     id: 2,
+//   ThreadID:1,
+//   enable:1,
+//   ThreadName:1,
+//   num_messages:1,
+//   message_index:1,
+//   transmit_number:1,
+//   cycle_count:1,
+//   channel:1,
+//   tx_period:1,
+//   tx_delay:1,
+//   stop_after_count:1,
+//   extended:1,
+//   ID:1,
+//   DLC:1,
+//   B0:1,
+//   B1:1,
+//   B2:1,
+//   B3:1,
+//   B4:1,
+//   B5:1,
+//   B6:1,
+//   B7:1
+//   }
+// ];

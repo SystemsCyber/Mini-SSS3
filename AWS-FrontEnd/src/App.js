@@ -2,8 +2,13 @@
 import * as React from "react";
 import "./App.css";
 import { withAuthenticator, AmplifySignOut } from "@aws-amplify/ui-react";
-import Amplify, { Auth } from "aws-amplify";
+import Amplify, { Auth, PubSub, API } from "aws-amplify";
 import awsconfig from "./aws-exports";
+import awsExports from "./aws-exports";
+
+import { AWSIoTProvider } from "@aws-amplify/pubsub/lib/Providers";
+import AWS from "aws-sdk";
+import { store } from "@risingstack/react-easy-state";
 
 import { Switch } from "@mui/material";
 import Stack from "@mui/material/Stack";
@@ -17,27 +22,56 @@ import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
 import PWM from "./PWM";
 import Pot from "./Pot";
-import CAN_Table from "./CAN_Table";
+import CanTable from "./CanTable";
 import UserInfo from "./components/widgets/user-info";
-import EventViewer from "./components/widgets/iot-message-viewer";
+// import EventViewer from "./components/widgets/iot-message-viewer";
 import {
-  PWMD,
-  Duty,
-  Freq,
-  SW,
-  PotD,
-  Wiper,
-  Monitor,
   CANData,
   CANGenData,
+  pwm1,
+  pwm2,
+  pwm3,
+  pwm4,
+  pwm5,
+  pwm6,
+  pot1,
+  pot2,
+  pot3,
+  pot4,
 } from "./data";
-import CAN_Gen_Table from "./CAN_Gen_Table";
-import { v4 as uuidv4 } from "uuid";
+import CanGenTable from "./CanGenTable";
+
 Amplify.configure(awsconfig);
 Auth.configure(awsconfig);
+const LOCAL_STORAGE_KEY = "iot-widget";
 
-const UUID = require("uuid-int");
-const generator = UUID(0);
+// const UUID = require("uuid-int");
+// const generator = UUID(0);
+
+const stateKeysToSave = [
+  "subscribeTopicInput",
+  "publishTopicInput",
+  "publishMessage",
+];
+
+const state = store({
+  iotPolicy: "amplify-toolkit-iot-message-viewer", // This policy is created by this Amplify project; you don't need to change this unless you want to use a different policy.
+  iotEndpoint: null, // We retrieve this when the component first loads
+  message_history_limit: 1,
+  message_count: 0,
+  messages: [],
+  subscribeTopicInput: "$aws/things/mini-sss3-1/shadow/update/accepted",
+  subscribeGET: "$aws/things/mini-sss3-1/shadow/get/accepted",
+  publishTopicInput: "$aws/things/mini-sss3-1/shadow/update",
+  PublishGET: "$aws/things/mini-sss3-1/shadow/get",
+  publishMessage: "Hello, world!",
+  isSubscribed: false,
+  subscribedTopic: "",
+  subscription: null,
+  subscriptionGET: null,
+  iotProviderConfigured: false,
+  flag: false,
+});
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -69,85 +103,6 @@ function a11yProps(index) {
     "aria-controls": `simple-tabpanel-${index}`,
   };
 }
-
-const StyledTabs = styled(Tabs)({
-  borderBottom: "1px solid #e8e8e8",
-  "& .MuiTabs-indicator": {
-    backgroundColor: "#1E4D2B",
-  },
-});
-
-// const StyledTab = styled((props) => <Tab disableRipple {...props} />)(
-//   ({ theme }) => ({
-//     textTransform: "none",
-//     minWidth: 0,
-//     [theme.breakpoints.up("sm")]: {
-//       minWidth: 0,
-//     },
-//     fontWeight: theme.typography.fontWeightRegular,
-//     marginRight: theme.spacing(1),
-//     color: "rgba(0, 0, 0, 0.85)",
-//     fontFamily: [
-//       "-apple-system",
-//       "BlinkMacSystemFont",
-//       '"Segoe UI"',
-//       "Roboto",
-//       '"Helvetica Neue"',
-//       "Arial",
-//       "sans-serif",
-//       '"Apple Color Emoji"',
-//       '"Segoe UI Emoji"',
-//       '"Segoe UI Symbol"',
-//     ].join(","),
-//     "&:hover": {
-//       color: "#40a9ff",
-//       opacity: 1,
-//     },
-//     "&.Mui-selected": {
-//       color: "#1890ff",
-//       fontWeight: theme.typography.fontWeightMedium,
-//     },
-//     "&.Mui-focusVisible": {
-//       backgroundColor: "#d1eaff",
-//     },
-//   })
-// );
-
-const StyledTab = styled((props) => <Tab disableRipple {...props} />)(
-  ({ theme }) => ({
-    textTransform: "none",
-    minWidth: 0,
-    [theme.breakpoints.up("sm")]: {
-      minWidth: 0,
-    },
-    fontWeight: theme.typography.fontWeightRegular,
-    marginRight: theme.spacing(1),
-    color: "rgba(0, 0, 0, 0.85)",
-    fontFamily: [
-      "-apple-system",
-      "BlinkMacSystemFont",
-      '"Segoe UI"',
-      "Roboto",
-      '"Helvetica Neue"',
-      "Arial",
-      "sans-serif",
-      '"Apple Color Emoji"',
-      '"Segoe UI Emoji"',
-      '"Segoe UI Symbol"',
-    ].join(","),
-    "&:hover": {
-      color: "#1E4D2B",
-      opacity: 1,
-    },
-    "&.Mui-selected": {
-      color: "#1E4D2B",
-      fontWeight: theme.typography.fontWeightMedium,
-    },
-    "&.Mui-focusVisible": {
-      backgroundColor: "#1E4D2B",
-    },
-  })
-);
 
 const MaterialUISwitch = styled(Switch)(({ theme }) => ({
   width: 62,
@@ -195,59 +150,6 @@ const MaterialUISwitch = styled(Switch)(({ theme }) => ({
     borderRadius: 20 / 2,
   },
 }));
-const DC_desc = "Duty Cycle";
-
-const pwm1 = PWMD(
-  Duty(50, false, "test_child"),
-  Freq(331, false, "test_child"),
-  SW(false, "test_child")
-);
-const pwm2 = PWMD(
-  Duty(50, false, "test_child"),
-  Freq(331, false, "test_child"),
-  SW(false, "test_child")
-);
-const pwm3 = PWMD(
-  Duty(50, false, "test_child"),
-  Freq(331, false, "test_child"),
-  SW(false, "test_child")
-);
-const pwm4 = PWMD(
-  Duty(50, false, "test_child"),
-  Freq(331, false, "test_child"),
-  SW(false, "test_child")
-);
-const pwm5 = PWMD(
-  Duty(50, false, "test_child"),
-  Freq(331, false, "test_child"),
-  SW(false, "test_child")
-);
-const pwm6 = PWMD(
-  Duty(50, false, "test_child"),
-  Freq(331, false, "test_child"),
-  SW(false, "test_child")
-);
-
-const pot1 = PotD(
-  Wiper(1, false, "test_child"),
-  SW(false, "test_child"),
-  Monitor(0, 0)
-);
-const pot2 = PotD(
-  Wiper(2, false, "test_child"),
-  SW(false, "test_child"),
-  Monitor(0, 0)
-);
-const pot3 = PotD(
-  Wiper(3, false, "test_child"),
-  SW(false, "test_child"),
-  Monitor(0, 0)
-);
-const pot4 = PotD(
-  Wiper(4, false, "test_child"),
-  SW(false, "test_child"),
-  Monitor(0, 0)
-);
 
 const can1 = CANData("0xDEAD", 159, 8, 1, 2, 3, 4, 5, 6, 7, 8);
 // enable,ThreadName, num_messages,message_index, cycle_count,channel,tx_periodLEN, tx_delay,stop_after_count,extended, ID,DLC,B0, B1,B2,B3,B4,B5,B6,B7
@@ -275,11 +177,176 @@ const can_gen_data = CANGenData(
   8
 );
 
+//------------------------------------------------------------------------------
+async function getIoTEndpoint() {
+  // Each AWS account has a unique IoT endpoint per region. We need to retrieve this value:
+  console.log("Getting IoT Endpoint...");
+  const credentials = await Auth.currentCredentials();
+  console.log(credentials);
+  const iot = new AWS.Iot({
+    region: awsExports.aws_project_region,
+    credentials: Auth.essentialCredentials(credentials),
+  });
+  const response = await iot
+    .describeEndpoint({ endpointType: "iot:Data-ATS" })
+    .promise();
+  state.iotEndpoint = `wss://${response.endpointAddress}/mqtt`;
+  console.log(`Your IoT Endpoint is:\n ${state.iotEndpoint}`);
+  configurePubSub();
+}
+
+async function configurePubSub() {
+  console.log("configurePubSub.");
+
+  if (!state.iotProviderConfigured) {
+    console.log(
+      `Configuring Amplify PubSub, region = ${awsExports.aws_project_region}, endpoint = ${state.iotEndpoint}`
+    );
+    Amplify.addPluggable(
+      new AWSIoTProvider({
+        aws_pubsub_region: awsExports.aws_project_region,
+        aws_pubsub_endpoint: state.iotEndpoint,
+      })
+    );
+    state.iotProviderConfigured = true;
+  } else {
+    console.log("Amplify IoT provider already configured.");
+  }
+  subscribeToTopic();
+}
+
+//------------------------------------------------------------------------------
+async function attachIoTPolicyToUser() {
+  // This should be the custom cognito attribute that tells us whether the user's
+  // federated identity already has the necessary IoT policy attached:
+  const IOT_ATTRIBUTE_FLAG = "custom:iotPolicyIsAttached";
+
+  var userInfo = await Auth.currentUserInfo({ bypassCache: true });
+  var iotPolicyIsAttached = userInfo.attributes[IOT_ATTRIBUTE_FLAG] === "true";
+  console.log(userInfo);
+  console.log(iotPolicyIsAttached);
+  if (!iotPolicyIsAttached) {
+    const apiName = "amplifytoolkit";
+    const path = "/attachIoTPolicyToFederatedUser";
+    const myInit = {
+      response: true, // OPTIONAL (return the entire Axios response object instead of only response.data)
+    };
+
+    console.log(
+      `Calling API GET ${path} to attach IoT policy to federated user...`
+    );
+    var response = await API.get(apiName, path, myInit);
+    console.log(
+      `GET ${path} ${response.status} response:\n ${JSON.stringify(
+        response.data,
+        null,
+        2
+      )}`
+    );
+    console.log(`Attached IoT Policy to federated user.`);
+  } else {
+    console.log(`Federated user ID already attached to IoT Policy.`);
+  }
+}
+
+//------------------------------------------------------------------------------
+function updateState(key, value) {
+  console.log(key, value);
+  state[key] = value;
+  var localKey = `${LOCAL_STORAGE_KEY}-${key}`;
+  localStorage.setItem(localKey, value);
+}
+
+//------------------------------------------------------------------------------
+async function handleReceivedMessage(data) {
+  // Received messages contain the topic name in a Symbol that we have to decode:
+  // console.log("Entered Receive Message");
+  const symbolKey = Reflect.ownKeys(data.value).find(
+    (key) => key.toString() === "Symbol(topic)"
+  );
+  const publishedTopic = data.value[symbolKey];
+  const message = JSON.stringify(data.value.state, null, 2);
+
+  // console.log(`Message received on ${publishedTopic}:\n ${message}`);
+  if (state.message_count >= state.message_history_limit) {
+    state.messages.shift();
+  } else {
+    state.message_count += 1;
+  }
+  const timestamp = new Date().toISOString();
+  state.messages.unshift(
+    message
+    // `${timestamp} - topic '${publishedTopic}':\n ${message}\n\n`
+  );
+  // this.proccessUpdateMessage(message);
+  state.flag = true;
+}
+
+//------------------------------------------------------------------------------
+function subscribeToTopic() {
+  // Fired when user clicks subscribe button:
+  if (state.isSubscribed) {
+    state.subscription.unsubscribe();
+    console.log(`Unsubscribed from ${state.subscribedTopic}`);
+    state.isSubscribed = false;
+    state.subscribedTopic = "";
+  }
+  state.subscription = PubSub.subscribe(state.subscribeTopicInput).subscribe({
+    next: (data) => handleReceivedMessage(data),
+    error: (error) => console.error(error),
+    close: () => console.log("Done"),
+  });
+  state.subscriptionGET = PubSub.subscribe(state.subscribeGET).subscribe({
+    next: (data) => handleReceivedMessage(data),
+    error: (error) => console.error(error),
+    close: () => console.log("Done"),
+  });
+  state.isSubscribed = true;
+  state.subscribedTopic = state.subscribeTopicInput;
+  console.log(
+    `Subscribed to IoT topic ${state.subscribeTopicInput} , ${state.subscribeGET}`
+  );
+}
+
+//------------------------------------------------------------------------------
+function sendMessage(publishMessage) {
+  // Fired when user clicks the publish button:
+  PubSub.publish(state.publishTopicInput, { "state": { "reported": publishMessage}});
+  console.log(`Published message to ${state.publishTopicInput}.`);
+}
+
+function getInitialStatus() {
+  // Fired when user clicks the publish button:
+  PubSub.publish(state.PublishGET, {});
+  console.log(`Published message to ${state.PublishGET}.`);
+}
+
+function updateFormValuesFromLocalStorage() {
+  for (const [key] of Object.entries(state)) {
+    if (stateKeysToSave.includes(key)) {
+      console.log(`Getting ${key} from local storage...`);
+      var localStorageValue = localStorage.getItem(
+        `${LOCAL_STORAGE_KEY}-${key}`
+      );
+
+      if (localStorageValue) {
+        // Convert true or false strings to boolean (needed for checkboxes):
+        if (["true", "false"].includes(localStorageValue)) {
+          localStorageValue = localStorageValue === "true";
+        }
+        //console.log(`Setting ${key} = `, localStorageValue);
+        state[key] = localStorageValue;
+        console.log("value = " + localStorageValue);
+      }
+    }
+  }
+}
+
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      ledOn: false,
+      KeyOn: false,
       tab: 0,
       pwm: {
         0: pwm1,
@@ -338,13 +405,33 @@ class App extends React.Component {
     this.setPotWiper = this.setPotWiper.bind(this);
     this.setCANCell = this.setCANCell.bind(this);
     this.PostCANRow = this.PostCANRow.bind(this);
+    this.setPotMonitor_fromResponse =
+      this.setPotMonitor_fromResponse.bind(this);
+    this.setPotState_fromResponse = this.setPotState_fromResponse.bind(this);
+    this.setPWMState_fromResponse = this.setPWMState_fromResponse.bind(this);
   }
 
   setLedState(state) {
     this.setState({
-      ledOn: state !== "0",
+      KeyOn: state !== "0",
     });
   }
+
+  
+  async handleKeySwButton(event) {
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    var body = {
+      KeyOn: event.target.checked,
+    };
+    var raw = JSON.stringify(body);
+    sendMessage({"KeyOn": {"value": this.state.KeyOn}});
+    this.setState({
+      KeyOn: !event.target.checked,
+    });
+  }
+
+
   setPWMState(state) {
     this.setState({
       pwm: state,
@@ -357,7 +444,6 @@ class App extends React.Component {
       tab: newValue,
     });
   }
-
   // PWM
   setPWMState_fromResponse(state) {
     //console.log("input of setPWMstatea from response", state);
@@ -490,23 +576,12 @@ class App extends React.Component {
     var pots_body = this.state.pwm[name];
     var obj = {};
     obj[name] = pots_body;
-
-    var requestOptions = {
-      method: "POST",
-      headers: myHeaders,
-      body: JSON.stringify(obj),
-      redirect: "follow",
-    };
-
-    let response = await fetch("/pwm", requestOptions);
-    let state = await response.json();
-    //console.log(state);
-    this.setPWMState_fromResponse(state);
+    sendMessage({"PWM":obj});
   }
 
   // Pots
   setPotState_fromResponse(state) {
-    //console.log("input of setPotState from response", state);
+    console.log("input of setPotState from response", state);
     let items = this.state.pots;
     for (const [key, value] of Object.entries(state)) {
       let item = { ...items[key] };
@@ -555,22 +630,9 @@ class App extends React.Component {
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
     var pwm_body = this.state.pots[name];
-
     var obj = {};
     obj[name] = pwm_body;
-    var requestOptions = {
-      method: "POST",
-      headers: myHeaders,
-      body: JSON.stringify(obj),
-      redirect: "follow",
-    };
-    // //console.log(requestOptions)
-    let response = await fetch("/pots", requestOptions);
-    let state = await response.json();
-    //console.log(state);
-    this.setPWMState_fromResponse(state);
-
-    // //console.log(this.state);
+    sendMessage({"Pots":obj});
   }
 
   setPotMonitor_fromResponse(state) {
@@ -609,7 +671,7 @@ class App extends React.Component {
         if (!(key in item)) {
           item[key] = {};
         }
-        if (key == "DATA") {
+        if (key === "DATA") {
           item["B0"] = value[0];
           item["B1"] = value[1];
           item["B2"] = value[2];
@@ -741,77 +803,40 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    Promise.all([
-      fetch("/led")
-        .then((response) => response.text())
-        .then((state) => this.setLedState(state)),
-      fetch("/pwm")
-        .then((response) => response.json())
-        // .then((state) => //console.log(state)),
-        .then((state) => this.setPWMState_fromResponse(state)),
-      fetch("/pots")
-        .then((response) => response.json())
-        // .then((state) => //console.log(state)),
-        .then((state) => this.setPotState_fromResponse(state)),
-
-      fetch("/cangen")
-        .then((response) => response.json())
-        // .then((state) => console.log(state)),
-        .then((state) => this.setCANGenState_fromResponse(state)),
-    ]);
-    // const interval = setInterval(() => {
-    //   this.read_voltage();
-    // }, 500);
-    // const can_interval = setInterval(() => {
-    //   this.read_CAN();
-    // }, 100);
-    // const can_gen_interval = setInterval(() => {
-    //   this.read_CAN_Gen();
-    // }, 1000);
+    async function setup() {
+      await getIoTEndpoint();
+      await attachIoTPolicyToUser();
+      setTimeout(function () {
+        getInitialStatus();
+      }, 100);
+    }
+    setup();
+    updateFormValuesFromLocalStorage();
+    const interval = setInterval(() => {
+      this.proccessUpdateMessage();
+    }, 100);
   }
 
-  async handleKeySwButton(event) {
-    //console.log("input to handleStateChange2: ", event.target.checked);
+  proccessUpdateMessage() {
+    if (state.flag) {
+      // console.log("Entered Process Update Message");
+      var data = JSON.parse(state.messages);
+      var reported = data.reported;
+      // console.log(reported);
+      if (reported.hasOwnProperty("PAC")) {
+        // console.log("Entered PAC Update Message");
+        this.setPotMonitor_fromResponse(data.reported.PAC);
+      }
+      if (reported.hasOwnProperty("PWM")) {
+        console.log("Entered PWM Update Message");
+        this.setPWMState_fromResponse(data.reported.PWM);
+      }
+      if (reported.hasOwnProperty("Pots")) {
+        this.setPotState_fromResponse(data.reported.Pots);
+      }
 
-    var myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-    var body = {
-      ledOn: event.target.checked,
-    };
-    var raw = JSON.stringify(body);
-
-    var requestOptions = {
-      method: "POST",
-      headers: myHeaders,
-      body: raw,
-      redirect: "follow",
-    };
-
-    const response = await fetch("/led", requestOptions);
-    const state = await response.text();
-    //console.log(state);
-    this.setState({
-      ledOn: state !== "0",
-    });
-    //console.log(this.state);
-  }
-
-  async read_voltage() {
-    fetch("/voltage")
-      .then((response) => response.json())
-      .then((state) => this.setPotMonitor_fromResponse(state));
-  }
-
-  async read_CAN() {
-    fetch("/can")
-      .then((response) => response.json())
-      .then((state) => this.setCAN_fromResponse(state));
-  }
-
-  async read_CAN_Gen() {
-    fetch("/cangen")
-      .then((response) => response.json())
-      .then((state) => this.setCANGenState_fromResponse(state));
+      state.flag = false;
+    }
   }
 
   render() {
@@ -869,7 +894,6 @@ class App extends React.Component {
                 setPWMSwitch={this.setPWMSwitch}
                 setPWMDuty={this.setPWMDuty}
                 setPWMFreq={this.setPWMFreq}
-                setPWMSwitch={this.setPWMSwitch}
                 post_pwm={this.post_pwm}
               />
               <PWM
@@ -879,7 +903,6 @@ class App extends React.Component {
                 setPWMSwitch={this.setPWMSwitch}
                 setPWMDuty={this.setPWMDuty}
                 setPWMFreq={this.setPWMFreq}
-                setPWMSwitch={this.setPWMSwitch}
                 post_pwm={this.post_pwm}
               />
               <PWM
@@ -889,7 +912,6 @@ class App extends React.Component {
                 setPWMSwitch={this.setPWMSwitch}
                 setPWMDuty={this.setPWMDuty}
                 setPWMFreq={this.setPWMFreq}
-                setPWMSwitch={this.setPWMSwitch}
                 post_pwm={this.post_pwm}
               />
               <PWM
@@ -899,7 +921,6 @@ class App extends React.Component {
                 setPWMSwitch={this.setPWMSwitch}
                 setPWMDuty={this.setPWMDuty}
                 setPWMFreq={this.setPWMFreq}
-                setPWMSwitch={this.setPWMSwitch}
                 post_pwm={this.post_pwm}
               />
               <PWM
@@ -909,7 +930,6 @@ class App extends React.Component {
                 setPWMSwitch={this.setPWMSwitch}
                 setPWMDuty={this.setPWMDuty}
                 setPWMFreq={this.setPWMFreq}
-                setPWMSwitch={this.setPWMSwitch}
                 post_pwm={this.post_pwm}
               />
               <PWM
@@ -919,7 +939,6 @@ class App extends React.Component {
                 setPWMSwitch={this.setPWMSwitch}
                 setPWMDuty={this.setPWMDuty}
                 setPWMFreq={this.setPWMFreq}
-                setPWMSwitch={this.setPWMSwitch}
                 post_pwm={this.post_pwm}
               />
             </TabPanel>
@@ -954,19 +973,23 @@ class App extends React.Component {
               />
             </TabPanel>
             <TabPanel value={this.state.tab} index={2}>
-              <CAN_Table data={this.state.can_rows}></CAN_Table>
+              <CanTable data={this.state.can_rows}></CanTable>
             </TabPanel>
             <TabPanel value={this.state.tab} index={3}>
-              <CAN_Gen_Table
+              <CanGenTable
                 data={this.state.can_gen}
                 setCANCell={this.setCANCell}
                 PostCANRow={this.PostCANRow}
-              ></CAN_Gen_Table>
+              ></CanGenTable>
             </TabPanel>
             <TabPanel value={this.state.tab} index={4}>
               <AmplifySignOut />
               <UserInfo />
-              <EventViewer />
+              {/* <EventViewer
+                setPotMonitor_fromResponse={this.setPotMonitor_fromResponse}
+                setPotState_fromResponse={this.setPotState_fromResponse}
+                setPWMState_fromResponse={this.setPWMState_fromResponse}
+              /> */}
             </TabPanel>
           </Box>
         </body>

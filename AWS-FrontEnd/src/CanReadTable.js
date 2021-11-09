@@ -24,7 +24,7 @@ function createCANData(ID, Count, Len, B0, B1, B2, B3, B4, B5, B6, B7) {
 // //   createCANData("0xDEAD", 559, 8, 1, 2, 3, 4, 5, 6, 7, 8),
 // ];
 
-export default function CAN_Table(props) {
+export default function CanReadTable(props) {
   useEffect(() => {
     // console.log(props.data);
     // Object.keys(props.data)((row) => ( console.log("row ID:",props.data[row])));
