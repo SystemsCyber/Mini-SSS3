@@ -7,6 +7,7 @@ import {
   Box,
   Typography,
   Alert,
+  Item
 } from "@mui/material";
 import Stack from "@mui/material/Stack";
 import { useEffect } from "react";
@@ -36,6 +37,7 @@ export default function Pot(props) {
         alignItems="top"
         style={{ margin: 5, padding: 5 }}
       >
+
         <Typography style={{ "margin-top": 10 }}>{props.Title}</Typography>
         <Switch
           name={props.name}

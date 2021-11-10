@@ -2,8 +2,11 @@
 #define BOARD_HAS_ECCX08
 #define ARDUINOJSON_ENABLE_PROGMEM 0
 #define DEBUGSERIAL
-#include "Arduino_DebugUtils.h"
+
 #include <Arduino.h>
+
+
+// #include "Arduino_DebugUtils.h"
 #include <SPI.h>
 #include <Ethernet.h>
 #include <aWOT.h>
@@ -19,6 +22,15 @@
 #include <arduino_secrets.h>
 #include <TimeLib.h>
 // #include <cryptoauthlib.h>
+// #include "EthernetServerSecureBearSSL.h"
+#include "TeensyDebug.h"
+#pragma GCC optimize("O0")
+
+int mark = 0;
+void test_function()
+{
+  mark++;
+}
 time_t RTCTime;
 
 // extern void reloadCAN();
@@ -37,6 +49,7 @@ const char broker[] = SECRET_BROKER;
 const char *certificate = SECRET_CERTIFICATE;
 unsigned long lastMillis = 0;
 
+bool Monitor = false;
 Application app;
 uint8_t buff[2048];
 char buff_c[2048];
@@ -85,7 +98,7 @@ bool parse_response(uint8_t *buffer)
 
   if (error)
   {
-    Debug.print(DBG_ERROR, "deserializeJson() failed: ");
+    //debug.print(DBG_ERROR, "deserializeJson() failed: ");
     // Serial.println(error.f_str());
     return false;
   }
@@ -181,16 +194,16 @@ DynamicJsonDocument getStatus_PAC()
 void read_potentiometers(Request &req, Response &res)
 {
   char json[2048];
-  Debug.print(DBG_INFO, "Got GET Request for Potentiometers, returned: ");
+  //debug.print(DBG_INFO, "Got GET Request for Potentiometers, returned: ");
   serializeJsonPretty(getStatus_Pots(), json);
-  Debug.print(DBG_INFO, json);
+  //debug.print(DBG_INFO, json);
   res.print(json);
 }
 
 void read_pac1934(Request &req, Response &res)
 {
   char json[2048];
-  Debug.print(DBG_DEBUG, "Got GET Request for PAC1934: ");
+  //debug.print(DBG_DEBUG, "Got GET Request for PAC1934: ");
   serializeJsonPretty(getStatus_PAC(), json);
   res.print(json);
 }
@@ -198,15 +211,15 @@ void read_pac1934(Request &req, Response &res)
 void read_PWM(Request &req, Response &res)
 {
   char json[2048];
-  Debug.print(DBG_INFO, "Got GET Request for PAC1934: ");
+  //debug.print(DBG_INFO, "Got GET Request for PAC1934: ");
   serializeJsonPretty(getStatus_PWM(), json);
-  Debug.print(DBG_DEBUG, json);
+  //debug.print(DBG_DEBUG, json);
   res.print(json);
 }
 
 void read_CAN(Request &req, Response &res)
 {
-  Debug.print(DBG_DEBUG, "Got GET Request for Read CAN:");
+  //debug.print(DBG_DEBUG, "Got GET Request for Read CAN:");
   char json[2048];
   serializeJsonPretty(can_dict, json);
   // if (DEBUG) Serial.println(json);
@@ -240,21 +253,21 @@ void update_Pots(uint8_t idx, int value)
 {
   if (value > 256)
   {
-    Debug.print(DBG_WARNING, "Value: %d is out of bound setting it to 256", value);
+    //debug.print(DBG_WARNING, "Value: %d is out of bound setting it to 256", value);
     value = 256;
   }
   else if (value < 0)
   {
-    Debug.print(DBG_WARNING, "Value: %d is out of bound setting it to 0", value);
+    //debug.print(DBG_WARNING, "Value: %d is out of bound setting it to 0", value);
     value = 0;
   }
 
   if (idx > numSPIpots)
   {
-    Debug.print(DBG_ERROR, "idx : %d is out of range of numSPIpots: %d", idx, numSPIpots);
+    //debug.print(DBG_ERROR, "idx : %d is out of range of numSPIpots: %d", idx, numSPIpots);
     return;
   }
-  Debug.print(DBG_INFO, "Entered update_Pots function with idx: %d, value: %d: ", idx, value);
+  //debug.print(DBG_INFO, "Entered update_Pots function with idx: %d, value: %d: ", idx, value);
   SPIpotWiperSettings[idx] = value;
   MCP41HV_SetWiper(SPIpotCS[idx], value);
 }
@@ -268,7 +281,7 @@ void on_POST_Pots(Request &req, Response &res)
   req.body(buff, sizeof(buff));
   if (!parse_response(buff))
   {
-    Debug.print(DBG_ERROR, "Not a valid Json Format");
+    //debug.print(DBG_ERROR, "Not a valid Json Format");
     res.print("Not a valid Json Format");
   }
   else
@@ -299,31 +312,31 @@ void update_PWM(uint8_t idx, int duty, int freq)
 {
   if (idx > numPWMs)
   {
-    Debug.print(DBG_ERROR, "idx : %d is out of range of numPWMs: %d", idx, numPWMs);
+    //debug.print(DBG_ERROR, "idx : %d is out of range of numPWMs: %d", idx, numPWMs);
     return;
   }
   if (duty > 4096)
   {
-    Debug.print(DBG_WARNING, "Duty: %d is out of bound setting it to 4096", duty);
+    //debug.print(DBG_WARNING, "Duty: %d is out of bound setting it to 4096", duty);
     duty = 4096;
   }
   else if (duty < 0)
   {
-    Debug.print(DBG_WARNING, "Duty: %d is out of bound setting it to 0", duty);
+    //debug.print(DBG_WARNING, "Duty: %d is out of bound setting it to 0", duty);
     duty = 0;
   }
   if (freq > 4096)
   {
-    Debug.print(DBG_WARNING, "Frequency: %d is out of bound setting it to 4096", freq);
+    //debug.print(DBG_WARNING, "Frequency: %d is out of bound setting it to 4096", freq);
     freq = 4096;
   }
   else if (freq < 0)
   {
-    Debug.print(DBG_WARNING, "Frequency: %d is out of bound setting it to 0", freq);
+    //debug.print(DBG_WARNING, "Frequency: %d is out of bound setting it to 0", freq);
     freq = 0;
   }
 
-  Debug.print(DBG_INFO, "Entered update_PWM function with idx: %d, duty: %d, freq: %d: ", idx, duty, freq);
+  //debug.print(DBG_INFO, "Entered update_PWM function with idx: %d, duty: %d, freq: %d: ", idx, duty, freq);
   pwmValue[idx] = duty;
   pwmFrequency[idx] = freq;
   analogWrite(PWMPins[idx], duty);
@@ -332,17 +345,17 @@ void update_PWM(uint8_t idx, int duty, int freq)
 
 void on_POST_PWM(Request &req, Response &res)
 {
-  Debug.print(DBG_INFO, "Got POST Request for PWM: ");
+  //debug.print(DBG_INFO, "Got POST Request for PWM: ");
   doc.clear();
   req.body(buff, sizeof(buff));
   if (!parse_response(buff))
   {
-    Debug.print(DBG_ERROR, "Not a valid Json Format");
+    //debug.print(DBG_ERROR, "Not a valid Json Format");
     res.print("Not a valid Json Format");
   }
   else
   {
-    Debug.print(DBG_INFO, "Got POST Request for PWM");
+    //debug.print(DBG_INFO, "Got POST Request for PWM");
 
     if (doc["0"])
     {
@@ -444,21 +457,21 @@ void onMessageReceived(int messageSize)
       JsonObject r_state = d_state["reported"];
       for (JsonPair kw : r_state)
       {
-        // Debug.print(DBG_DEBUG, "Entered 2nd for loop");
+        // //debug.print(DBG_DEBUG, "Entered 2nd for loop");
         // Serial.print(kw.key().c_str());
         // serializeJsonPretty(kw.value(), Serial);
         if (kw.key() == "Pots")
         {
-          Debug.print(DBG_DEBUG, "Entered Pots");
+          //debug.print(DBG_DEBUG, "Entered Pots");
           // serializeJsonPretty(kw.value(), Serial);
           JsonObject Pots = kw.value().as<JsonObject>();
           for (JsonPair kp : Pots)
           {
-            Debug.print(DBG_INFO, "Entered 2nd for loop");
+            //debug.print(DBG_INFO, "Entered 2nd for loop");
 
             JsonObject Pot = kp.value().as<JsonObject>();
             uint8_t val = Pot["wiper"]["value"];
-            Debug.print(DBG_INFO, "got Wiper value: %d for pot%s", val, kp.key().c_str());
+            //debug.print(DBG_INFO, "got Wiper value: %d for pot%s", val, kp.key().c_str());
             update_Pots(atoi(kp.key().c_str()), val);
           }
         }
@@ -469,8 +482,13 @@ void onMessageReceived(int messageSize)
         {
           JsonObject KeyOn = kw.value().as<JsonObject>();
           bool val = KeyOn["value"];
-          Debug.print(DBG_INFO, "AWS: got KeyOn value: %d ", val);
+          //debug.print(DBG_INFO, "AWS: got KeyOn value: %d ", val);
           set_keySw(val);
+        }
+        else if (kw.key() == "Monitor")
+        {
+          Monitor = kw.value();
+          PAC.begin();
         }
       }
     }
@@ -480,7 +498,7 @@ void onMessageReceived(int messageSize)
 
 void publishMessage()
 {
-  Debug.print(DBG_INFO, "Publishing message");
+  //debug.print(DBG_INFO, "Publishing message");
 
   mqttClient.beginMessage("$aws/things/mini-sss3-1/shadow/update");
   StaticJsonDocument<2048> update;
@@ -545,12 +563,20 @@ void publishIP()
   serializeJson(update, mqttClient);
   mqttClient.endMessage();
 }
+
 void setup()
-{
+{ 
+  Serial.begin(115200);
+  // while (!Serial)
+  // {
+  //   ; // wait for serial port to connect. Needed for native USB port only
+  // }
+  debug.begin(SerialUSB1);
+  halt();
   setPinModes();
   Wire.begin();
   SPI.begin();
-  Debug.setDebugLevel(DBG_INFO);
+  // Debug.setDebugLevel(DBG_INFO);
   PAC.begin();
   // Get burned in MAC address
   byte mac[6];
@@ -565,18 +591,14 @@ void setup()
   Can2.begin();
   Can2.setBaudRate(250000);
   // Open serial communications and wait for port to open:
-  Serial.begin(9600);
-  while (!Serial)
-  {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
+  
   // start the Ethernet connection and the server:
   // Ethernet.begin(mac, ip); for server
   Ethernet.begin(mac);
   // Check for Ethernet hardware present
   if (Ethernet.hardwareStatus() == EthernetNoHardware)
   {
-    Debug.print(DBG_DEBUG, "Ethernet shield was not found.  Sorry, can't run without hardware. :(");
+    //debug.print(DBG_DEBUG, "Ethernet shield was not found.  Sorry, can't run without hardware. :(");
     while (true)
     {
       delay(1); // do nothing, no point running without Ethernet hardware
@@ -584,12 +606,12 @@ void setup()
   }
   if (Ethernet.linkStatus() == LinkOFF)
   {
-    Debug.print(DBG_DEBUG, "Ethernet cable is not connected.");
+    //debug.print(DBG_DEBUG, "Ethernet cable is not connected.");
   }
 
-  Debug.print(DBG_INFO, "MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  //debug.print(DBG_INFO, "MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   Serial.println();
-  Debug.print(DBG_INFO, "My IP address: ");
+  //debug.print(DBG_INFO, "My IP address: ");
   Serial.println(Ethernet.localIP());
   ArduinoBearSSL.onGetTime(getTime);
   sslClient.setEccSlot(0, certificate);
@@ -636,21 +658,14 @@ void loop()
   mqttClient.poll();
 
   // publish a message roughly every 5 seconds.
-  if (millis() - lastMillis > 5000)
+  if (millis() - lastMillis > 1000)
   {
     lastMillis = millis();
-    publishPAC();
+    // if(Monitor) publishPAC();
     // publishIP();
 
     // publishMessage();
-    // atcab_get_device_address();
 
-    // Serial.print("Calling atcab_get_device_address: ");
-    // Serial.println(atcab_get_device_address(atcab_get_device()));
-    // char ver[20];
-    // atcab_version(ver);
-    // Serial.print("Calling atcab_version: ");
-    // Serial.println(ver);
     // // cfg_ateccx08a_i2c_default
   }
 

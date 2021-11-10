@@ -753,7 +753,7 @@ void read_CAN_Gen(Request &req, Response &res)
     }
   }
   serializeJsonPretty(response, json);
-  Debug.print(DBG_DEBUG, "Size of Response: %d", response.memoryUsage());
+  //debug.print(DBG_DEBUG, "Size of Response: %d", response.memoryUsage());
   res.print(json);
 }
 

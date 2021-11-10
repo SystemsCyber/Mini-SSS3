@@ -132,7 +132,7 @@ void setup()
 
   if (!ECCX08.begin())
   {
-    Debug.print(DBG_WARNING, "No ECCX08 present!");
+    //debug.print(DBG_WARNING, "No ECCX08 present!");
     while (1)
       ;
   }
@@ -142,7 +142,7 @@ void setup()
   // Check for Ethernet hardware present
   if (Ethernet.hardwareStatus() == EthernetNoHardware)
   {
-    Debug.print(DBG_DEBUG, "Ethernet shield was not found.  Sorry, can't run without hardware. :(");
+    //debug.print(DBG_DEBUG, "Ethernet shield was not found.  Sorry, can't run without hardware. :(");
     while (true)
     {
       delay(1); // do nothing, no point running without Ethernet hardware
@@ -150,15 +150,15 @@ void setup()
   }
   if (Ethernet.linkStatus() == LinkOFF)
   {
-    Debug.print(DBG_DEBUG, "Ethernet cable is not connected.");
+    //debug.print(DBG_DEBUG, "Ethernet cable is not connected.");
   }
   // print your local IP address:
-  Debug.print(DBG_INFO,"MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  //debug.print(DBG_INFO,"MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   Serial.println();
-  Debug.print(DBG_INFO,"My IP address: ");
+  //debug.print(DBG_INFO,"My IP address: ");
   Serial.println(Ethernet.localIP());
-  // Debug.print(DBG_INFO, "DEBUG IP address: %s", String(Ethernet.localIP()));
-  //  Debug.print(DBG_ERROR ,"%sString(Ethernet.localIP()));
+  // //debug.print(DBG_INFO, "DEBUG IP address: %s", String(Ethernet.localIP()));
+  //  //debug.print(DBG_ERROR ,"%sString(Ethernet.localIP()));
 
   Serial.begin(9600);
   /* Give a few seconds for the Serial connection to be available */
@@ -201,17 +201,17 @@ void loop()
 
 void onNetworkConnect()
 {
-  Debug.print(DBG_INFO,">>>> CONNECTED to network");
+  //debug.print(DBG_INFO,">>>> CONNECTED to network");
   Serial.print("My IP address: ");
   Serial.println(Ethernet.localIP());
 }
 
 void onNetworkDisconnect()
 {
-  Debug.print(DBG_WARNING,">>>> DISCONNECTED from network");
+  //debug.print(DBG_WARNING,">>>> DISCONNECTED from network");
 }
 
 void onNetworkError()
 {
-  Debug.print(DBG_ERROR,">>>> ERROR");
+  //debug.print(DBG_ERROR,">>>> ERROR");
 }

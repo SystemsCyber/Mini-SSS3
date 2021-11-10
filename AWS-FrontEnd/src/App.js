@@ -10,7 +10,7 @@ import { AWSIoTProvider } from "@aws-amplify/pubsub/lib/Providers";
 import AWS from "aws-sdk";
 import { store } from "@risingstack/react-easy-state";
 
-import { Switch } from "@mui/material";
+import { Switch, Checkbox, FormControlLabel } from "@mui/material";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/material/styles";
@@ -311,7 +311,9 @@ function subscribeToTopic() {
 //------------------------------------------------------------------------------
 function sendMessage(publishMessage) {
   // Fired when user clicks the publish button:
-  PubSub.publish(state.publishTopicInput, { "state": { "reported": publishMessage}});
+  PubSub.publish(state.publishTopicInput, {
+    state: { reported: publishMessage },
+  });
   console.log(`Published message to ${state.publishTopicInput}.`);
 }
 
@@ -394,6 +396,8 @@ class App extends React.Component {
       },
       can_rows: [],
       can_gen: {},
+      Monitor: false,
+      CanViewer: false,
     };
     this.handleChange = this.handleChange.bind(this);
     // this.setPWMDuty = this.setPWMDuty.bind(this);
@@ -417,7 +421,6 @@ class App extends React.Component {
     });
   }
 
-  
   async handleKeySwButton(event) {
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
@@ -425,12 +428,11 @@ class App extends React.Component {
       KeyOn: event.target.checked,
     };
     var raw = JSON.stringify(body);
-    sendMessage({"KeyOn": {"value": this.state.KeyOn}});
+    sendMessage({ KeyOn: { value: this.state.KeyOn } });
     this.setState({
       KeyOn: !event.target.checked,
     });
   }
-
 
   setPWMState(state) {
     this.setState({
@@ -576,7 +578,7 @@ class App extends React.Component {
     var pots_body = this.state.pwm[name];
     var obj = {};
     obj[name] = pots_body;
-    sendMessage({"PWM":obj});
+    sendMessage({ PWM: obj });
   }
 
   // Pots
@@ -632,7 +634,7 @@ class App extends React.Component {
     var pwm_body = this.state.pots[name];
     var obj = {};
     obj[name] = pwm_body;
-    sendMessage({"Pots":obj});
+    sendMessage({ Pots: obj });
   }
 
   setPotMonitor_fromResponse(state) {
@@ -651,6 +653,21 @@ class App extends React.Component {
     this.setState({
       pots: items,
     });
+  }
+
+  CheckBoxHandler(event) {
+    let name = event.target.name;
+    if (name === "Monitor")
+    {
+      sendMessage({ Monitor : event.target.checked });
+      this.setState({ Monitor : event.target.checked });
+    }
+    else if (name === "CanViewer")
+    {
+      sendMessage({ CanViewer : event.target.checked });
+      this.setState({ CanViewer : event.target.checked });
+    }
+    
   }
 
   // CAN Gen
@@ -943,6 +960,18 @@ class App extends React.Component {
               />
             </TabPanel>
             <TabPanel value={this.state.tab} index={1}>
+              <Stack direction="row" spacing={1}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      name="Monitor"
+                      checked={this.state.Monitor}
+                      onChange={(event) => this.CheckBoxHandler(event)}
+                    />
+                  }
+                  label="Voltage Monitor"
+                />
+              </Stack>
               <Pot
                 name="0"
                 Title={"Pot1"}
@@ -973,6 +1002,18 @@ class App extends React.Component {
               />
             </TabPanel>
             <TabPanel value={this.state.tab} index={2}>
+              <Stack direction="row" spacing={1}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      name="CanViewer"
+                      checked={this.state.CanViewer}
+                      onChange={(event) => this.CheckBoxHandler(event)}
+                    />
+                  }
+                  label="Stream CAN"
+                />
+              </Stack>
               <CanTable data={this.state.can_rows}></CanTable>
             </TabPanel>
             <TabPanel value={this.state.tab} index={3}>
