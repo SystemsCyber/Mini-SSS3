@@ -720,7 +720,7 @@ int StrToHex(char str[])
   return (int)strtol(str, 0, 16);
 }
 
-void read_CAN_Gen(Request &req, Response &res)
+void readCANGen(Request &req, Response &res)
 {
   StaticJsonDocument<20000> response;
   char json[20000];
@@ -780,7 +780,7 @@ bool parse_response_can_gen_doc(uint8_t *buffer)
   return true;
 }
 
-void update_CAN_Gen(Request &req, Response &res)
+void updateCANGen(Request &req, Response &res)
 {
   uint8_t buff_can[2048];
   char buff_can_c[2048];
@@ -822,6 +822,6 @@ void update_CAN_Gen(Request &req, Response &res)
       can_messages[index]->message_list[sub_index][i] = StrToHex(can_gen_doc["DATA"][i]);
     }
 
-    return read_CAN_Gen(req, res);
+    return readCANGen(req, res);
   }
 }

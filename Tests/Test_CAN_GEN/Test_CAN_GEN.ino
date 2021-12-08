@@ -3,6 +3,7 @@
 FlexCAN_T4<CAN1, RX_SIZE_256, TX_SIZE_16> can1;
 FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> can2;
 CAN_message_t msg;
+CAN_message_t msg1;
 
 void setup(void) {
   can1.begin();
@@ -22,24 +23,15 @@ void setup(void) {
 }
 
 void loop() {
-
-
-  if ( can1.read(msg) ) {
-    digitalWrite(21, HIGH);
-    Serial.print("CAN1 ");
-    Serial.print("MB: "); Serial.print(msg.mb);
-    Serial.print("  ID: 0x"); Serial.print(msg.id, HEX );
-    Serial.print("  LEN: "); Serial.print(msg.len);
-    Serial.print(" DATA: ");
-    for ( uint8_t i = 0; i < 8; i++ ) {
-      if (msg.buf[i]<16) Serial.print("0");
-      Serial.print(msg.buf[i],HEX); Serial.print(" ");
-    }
-    Serial.print("  TS: "); Serial.println(msg.timestamp);
-    delay(10);
-    digitalWrite(21, LOW);
+  msg1.id = 0xDEADBEEF;
+  msg1.len = 8;
+  for ( uint8_t i = 0; i < 8; i++ ) {
+    msg1.buf[i] = i;
   }
-  else if ( can2.read(msg) ) {
+  msg1.flags.extended = 1;
+  can1.write(msg1);
+  
+  if ( can2.read(msg) ) {
     Serial.print("CAN2 ");
     Serial.print("MB: "); Serial.print(msg.mb);
     Serial.print("  ID: 0x"); Serial.print(msg.id, HEX );
@@ -51,4 +43,5 @@ void loop() {
     }
     Serial.print("  TS: "); Serial.println(msg.timestamp);
   }
+  delay(100);
 }

@@ -45,8 +45,6 @@ Amplify.configure(awsconfig);
 Auth.configure(awsconfig);
 const LOCAL_STORAGE_KEY = "iot-widget";
 
-// const UUID = require("uuid-int");
-// const generator = UUID(0);
 
 const stateKeysToSave = [
   "subscribeTopicInput",

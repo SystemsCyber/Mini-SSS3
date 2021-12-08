@@ -20,12 +20,24 @@
 #include <Ethernet.h>
 
 // Enter a MAC address for your controller below.
-// Newer Ethernet shields have a MAC address printed on a sticker on the shield
+//// Newer Ethernet shields have a MAC address printed on a sticker on the shield
 byte mac[] = {
-  0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02
+  0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x03
 };
 
 void setup() {
+//  byte mac[6];
+//  for (uint8_t by = 0; by < 2; by++)
+//    mac[by] = (HW_OCOTP_MAC1 >> ((1 - by) * 8)) & 0xFF;
+//  for (uint8_t by = 0; by < 4; by++)
+//    mac[by + 2] = (HW_OCOTP_MAC0 >> ((3 - by) * 8)) & 0xFF;
+  Serial.print("MAC: ");
+  for (uint8_t by = 0; by < 6; by++)
+  {
+    Serial.print(mac[by], HEX);
+    Serial.print(":");
+  }
+  Serial.println();
   pinMode(7, OUTPUT);
   pinMode(8, OUTPUT);
   pinMode(9, OUTPUT);
@@ -58,7 +70,7 @@ void setup() {
     }
   }
   // print your local IP address:
-  Serial.print("My IP address: ");
+  Serial.print("IP address: ");
   Serial.println(Ethernet.localIP());
 }
 

@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "memory": "cpp",
+        "atcacert_def.h": "c",
+        "*.tpp": "cpp"
+    },
+    "python.pythonPath": "C:\\Users\\ganna\\.conda\\envs\\microchip-38\\python.exe"
+}

@@ -5,7 +5,6 @@
 
 #include <Arduino.h>
 
-
 // #include "Arduino_DebugUtils.h"
 #include <SPI.h>
 #include <Ethernet.h>
@@ -24,6 +23,11 @@
 // #include <cryptoauthlib.h>
 // #include "EthernetServerSecureBearSSL.h"
 #include "TeensyDebug.h"
+#include "Watchdog_t4.h"
+WDT_T4<WDT1> wdt;
+
+// #include <BearSSLServer.h>
+
 #pragma GCC optimize("O0")
 
 int mark = 0;
@@ -42,6 +46,7 @@ void publishPWM();
 IPAddress ip(192, 168, 1, 177);
 
 EthernetServer server(80);
+// BearSSLServer server(443);
 EthernetClient client;
 BearSSLClient sslClient(client); // Used for SSL/TLS connection, integrates with ECC508
 MqttClient mqttClient(sslClient);
@@ -106,7 +111,7 @@ bool parse_response(uint8_t *buffer)
   return true;
 }
 
-void read_keySw(Request &req, Response &res)
+void readKeySw(Request &req, Response &res)
 {
   if (DEBUG)
     Serial.print("Got GET Request for LED returned: ");
@@ -124,7 +129,7 @@ void set_keySw(bool value)
   digitalWrite(ignitionCtlPin, ignitionCtlState); // Remove Later
 }
 
-void update_keySw(Request &req, Response &res)
+void updateKeySw(Request &req, Response &res)
 {
 
   // JsonObject& config = jb.parseObject( &req);
@@ -144,9 +149,9 @@ void update_keySw(Request &req, Response &res)
     update["state"]["reported"]["KeyOn"]["value"] = state;
     serializeJson(update, mqttClient);
     mqttClient.endMessage();
-    return read_keySw(req, res);
+    return readKeySw(req, res);
   }
-  // return read_keySw(req, res);
+  // return readKeySw(req, res);
 }
 
 DynamicJsonDocument getStatus_Pots()
@@ -191,7 +196,7 @@ DynamicJsonDocument getStatus_PAC()
   return response;
 }
 
-void read_potentiometers(Request &req, Response &res)
+void readPots(Request &req, Response &res)
 {
   char json[2048];
   //debug.print(DBG_INFO, "Got GET Request for Potentiometers, returned: ");
@@ -200,7 +205,7 @@ void read_potentiometers(Request &req, Response &res)
   res.print(json);
 }
 
-void read_pac1934(Request &req, Response &res)
+void readPAC1934(Request &req, Response &res)
 {
   char json[2048];
   //debug.print(DBG_DEBUG, "Got GET Request for PAC1934: ");
@@ -208,7 +213,7 @@ void read_pac1934(Request &req, Response &res)
   res.print(json);
 }
 
-void read_PWM(Request &req, Response &res)
+void readPWM(Request &req, Response &res)
 {
   char json[2048];
   //debug.print(DBG_INFO, "Got GET Request for PAC1934: ");
@@ -217,7 +222,7 @@ void read_PWM(Request &req, Response &res)
   res.print(json);
 }
 
-void read_CAN(Request &req, Response &res)
+void readCAN(Request &req, Response &res)
 {
   //debug.print(DBG_DEBUG, "Got GET Request for Read CAN:");
   char json[2048];
@@ -272,7 +277,7 @@ void update_Pots(uint8_t idx, int value)
   MCP41HV_SetWiper(SPIpotCS[idx], value);
 }
 
-void on_POST_Pots(Request &req, Response &res)
+void updatePots(Request &req, Response &res)
 {
 
   // JsonObject& config = jb.parseObject( &req);
@@ -304,7 +309,7 @@ void on_POST_Pots(Request &req, Response &res)
     }
     publishPots();
 
-    return read_potentiometers(req, res);
+    return readPots(req, res);
   }
 }
 
@@ -337,13 +342,17 @@ void update_PWM(uint8_t idx, int duty, int freq)
   }
 
   //debug.print(DBG_INFO, "Entered update_PWM function with idx: %d, duty: %d, freq: %d: ", idx, duty, freq);
+  char buffer[100];
+  sprintf(buffer, "Entered update_PWM function with idx: %d, duty: %d, freq: %d: ", idx, duty, freq);
+  Serial.print(buffer);
+
   pwmValue[idx] = duty;
   pwmFrequency[idx] = freq;
   analogWrite(PWMPins[idx], duty);
   analogWriteFrequency(PWMPins[idx], freq);
 }
 
-void on_POST_PWM(Request &req, Response &res)
+void updatePWM(Request &req, Response &res)
 {
   //debug.print(DBG_INFO, "Got POST Request for PWM: ");
   doc.clear();
@@ -351,14 +360,16 @@ void on_POST_PWM(Request &req, Response &res)
   if (!parse_response(buff))
   {
     //debug.print(DBG_ERROR, "Not a valid Json Format");
-    res.print("Not a valid Json Format");
+    res.sendStatus(400);
+    // res.print("Not a valid Json Format");
   }
   else
   {
     //debug.print(DBG_INFO, "Got POST Request for PWM");
-
+    Serial.print("Got POST Request for PWM: ");
     if (doc["0"])
     {
+
       String duty = doc["0"]["duty"]["value"];
       String freq = doc["0"]["freq"]["value"];
       int sw = doc["0"]["sw"]["value"];
@@ -398,6 +409,8 @@ void on_POST_PWM(Request &req, Response &res)
         update_PWM(3, 0, 0);
     }
     publishPWM();
+    return readPWM(req, res);
+    // res.print("PWM Updated");
   }
 }
 
@@ -564,15 +577,21 @@ void publishIP()
   mqttClient.endMessage();
 }
 
+void WatchdogCallback()
+{
+  Serial.println("YOU DIDNT FEED THE DOG, 255 CYCLES TILL RESET...");
+}
+
 void setup()
-{ 
+{
+
   Serial.begin(115200);
-  // while (!Serial)
-  // {
-  //   ; // wait for serial port to connect. Needed for native USB port only
-  // }
-  debug.begin(SerialUSB1);
-  halt();
+  while (!Serial)
+  {
+    ; // wait for serial port to connect. Needed for native USB port only
+  }
+  // debug.begin(SerialUSB1);
+  // halt();
   setPinModes();
   Wire.begin();
   SPI.begin();
@@ -584,14 +603,27 @@ void setup()
     mac[by] = (HW_OCOTP_MAC1 >> ((1 - by) * 8)) & 0xFF;
   for (uint8_t by = 0; by < 4; by++)
     mac[by + 2] = (HW_OCOTP_MAC0 >> ((3 - by) * 8)) & 0xFF;
+  Serial.print("MAC: ");
+  for (uint8_t by = 0; by < 6; by++)
+    Serial.print(mac[by], HEX);
+  Serial.print(":");
+  Serial.println();
   Ethernet.init(14); // Most Arduino shields
 
+  // Setup watchdog timer
+  WDT_timings_t config;
+  config.window = 5;   /* in seconds, 32ms to 522.232s, must be smaller than timeout */
+  config.timeout = 10; /* in seconds, 32ms to 522.232s */
+  config.callback = WatchdogCallback;
+  wdt.begin(config);
+
+  //setup CAN
   Can1.begin();
   Can1.setBaudRate(250000);
   Can2.begin();
   Can2.setBaudRate(250000);
   // Open serial communications and wait for port to open:
-  
+
   // start the Ethernet connection and the server:
   // Ethernet.begin(mac, ip); for server
   Ethernet.begin(mac);
@@ -617,17 +649,17 @@ void setup()
   sslClient.setEccSlot(0, certificate);
   mqttClient.onMessage(onMessageReceived);
 
-  app.get("/led", &read_keySw);
-  app.put("/led", &update_keySw);
-  app.post("/led", &update_keySw);
-  app.get("/pots", &read_potentiometers);
-  app.post("/pots", &on_POST_Pots);
-  app.get("/pwm", &read_PWM);
-  app.post("/pwm", &on_POST_PWM);
-  app.get("/voltage", &read_pac1934);
-  app.get("/can", &read_CAN);
-  app.get("/cangen", &read_CAN_Gen);
-  app.post("/cangen", &update_CAN_Gen);
+  app.get("/led", &readKeySw);
+  app.put("/led", &updateKeySw);
+  app.post("/led", &updateKeySw);
+  app.get("/pots", &readPots);
+  app.post("/pots", &updatePots);
+  app.get("/pwm", &readPWM);
+  app.post("/pwm", &updatePWM);
+  app.get("/voltage", &readPAC1934);
+  app.get("/can", &readCAN);
+  app.get("/cangen", &readCANGen);
+  app.post("/cangen", &updateCANGen);
   app.route(staticFiles());
   server.begin();
   ignitionCtlState = true;
@@ -646,6 +678,8 @@ void setup()
 
 void loop()
 {
+  static uint32_t feed = millis();
+  // BearSSLClient client = server.available();
   EthernetClient client = server.available();
 
   if (!mqttClient.connected())
@@ -661,6 +695,7 @@ void loop()
   if (millis() - lastMillis > 1000)
   {
     lastMillis = millis();
+    // Serial.print("Hello");
     // if(Monitor) publishPAC();
     // publishIP();
 
@@ -668,7 +703,6 @@ void loop()
 
     // // cfg_ateccx08a_i2c_default
   }
-
   if (client.connected())
   {
     app.process(&client);
@@ -714,4 +748,259 @@ void loop()
   //   }
   //   Serial.print("  TS: "); Serial.println(msg.timestamp);
   // }
+  if (Ethernet.linkStatus() == LinkOFF)
+  {
+    //debug.print(DBG_DEBUG, "Ethernet cable is not connected.");
+  }
+  else
+  {
+    wdt.feed();
+  }
 }
+
+// // #include <ArduinoECCX08.h>
+// // #include <utility/ECCX08CSR.h>
+// // #include <utility/ECCX08JWS.h>
+
+// //  byte signature[64];
+// //   byte digest[32];
+
+// //   byte publicKey[64];
+// // //   byte message[32] = {
+// // //   0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+// // //   0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
+// // // };
+// // byte message[32] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+// // void setup() {
+// //   Serial.begin(9600);
+// //   while (!Serial);
+// //  if (!ECCX08.begin()) {
+// //     Serial.println("No ECCX08 present!");
+// //     while (1);
+// //   }
+// //   String serialNumber = ECCX08.serialNumber();
+// //   Serial.print("ECCX08 Serial Number = ");
+// //   Serial.println(serialNumber);
+// //   Serial.println();
+// //   if (!ECCX08CSR.begin(0,false)) {
+// //     Serial.println("Error starting CSR generation!");
+// //     while (1);
+// //   }
+// //   ECCX08CSR.setCountryName("US");
+// //   ECCX08CSR.setStateProvinceName("CO");
+// //   ECCX08CSR.setLocalityName("Fort Collins");
+// //   ECCX08CSR.setOrganizationName("CSU");
+// //   ECCX08CSR.setOrganizationalUnitName("SystemCyber");
+// //   ECCX08CSR.setCommonName(serialNumber.c_str());
+// //   String csr = ECCX08CSR.end();
+// //   Serial.println("Here's your CSR generated from the private key in slot 0:");
+// //   Serial.println();
+// //   Serial.println(csr);
+// //    // put your main code here, to run repeatedly:
+
+// //    String publicKeyPem = ECCX08JWS.publicKey(0, false);
+
+// //   if (!publicKeyPem || publicKeyPem == "") {
+// //     Serial.println("Error generating public key!");
+// //     while (1);
+// //   }
+
+// //   Serial.println("Here's your public key PEM, enjoy!");
+// //   Serial.println();
+// //   Serial.println(publicKeyPem);
+
+// //   ECCX08.beginSHA256();
+// //   ECCX08.updateSHA256(message);
+// //   ECCX08.endSHA256(digest);
+// //  Serial.println("digest = [");
+// //     for (int i = 0; i < sizeof(digest) ; i++)
+// //   {
+// //     Serial.print("0x");
+// //     if ((digest[i] >> 4) == 0) Serial.print("0"); // print preceeding high nibble if it's zero
+// //     Serial.print(digest[i], HEX);
+// //     if (i != 63) Serial.print(", ");
+// //     if ((31 - i) % 16 == 0) Serial.println();
+// //   }
+// //   Serial.println("]");
+
+// // Serial.println("message = ");
+// //     for (int i = 0; i < sizeof(message) ; i++)
+// //   {
+// //     Serial.print("0x");
+// //     if ((message[i] >> 4) == 0) Serial.print("0"); // print preceeding high nibble if it's zero
+// //     Serial.print(message[i], HEX);
+// //     if (i != 63) Serial.print(", ");
+// //     if ((31 - i) % 16 == 0) Serial.println();
+// //   }
+// //   Serial.println("]");
+
+// //    ECCX08.ecSign(0,message,signature);
+// //    ECCX08.generatePublicKey(0,publicKey);
+// //   Serial.println("uint8_t publicKey[64] = {");
+// //     for (int i = 0; i < sizeof(publicKey) ; i++)
+// //   {
+// //     Serial.print("0x");
+// //     if ((publicKey[i] >> 4) == 0) Serial.print("0"); // print preceeding high nibble if it's zero
+// //     Serial.print(publicKey[i], HEX);
+// //     if (i != 63) Serial.print(", ");
+// //     if ((31 - i) % 16 == 0) Serial.println();
+// //   }
+// //   Serial.println("};");
+
+// //   Serial.println("uint8_t signature[64] = {");
+// //   for (int i = 0; i < sizeof(signature) ; i++)
+// //   {
+// //     Serial.print("0x");
+// //     if ((signature[i] >> 4) == 0) Serial.print("0"); // print preceeding high nibble if it's zero
+// //     Serial.print(signature[i], HEX);
+// //     if (i != 63) Serial.print(", ");
+// //     if ((31 - i) % 16 == 0) Serial.println();
+// //   }
+// //   Serial.println("};");
+
+// // }
+
+// // void loop() {
+// // // Serial.println("uint8_t publicKey[64] = {");
+// // //     for (int i = 0; i < sizeof(publicKey) ; i++)
+// // //   {
+// // //     Serial.print("0x");
+// // //     if ((publicKey[i] >> 4) == 0) Serial.print("0"); // print preceeding high nibble if it's zero
+// // //     Serial.print(publicKey[i], HEX);
+// // //     if (i != 31) Serial.print(", ");
+// // //     if ((31 - i) % 16 == 0) Serial.println();
+// // //   }
+// // //   Serial.println("};");
+// // //   delay(2000);
+
+// // }
+
+// /*
+// Alice
+// */
+// #include <ArduinoECCX08.h>
+// byte signature[64];
+// byte message[32] = {
+// 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+// 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+// 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+// 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
+// };
+// byte publicKey[64];
+
+// void printMessage()
+// {
+//   Serial.println("byte message[32] = {");
+//   for (int i = 0; i < sizeof(message); i++)
+//   {
+//     Serial.print("0x");
+//     if ((message[i] >> 4) == 0)
+//       Serial.print("0"); // print preceeding high nibble if it's zero
+//     Serial.print(message[i], HEX);
+//     if (i != 63)
+//       Serial.print(", ");
+//     if ((31 - i) % 16 == 0)
+//       Serial.println();
+//   }
+//   Serial.println("};");
+// }
+// void printPublicKey()
+// {
+//   Serial.println("byte publicKey[64] = {");
+//   for (int i = 0; i < sizeof(publicKey); i++)
+//   {
+//     Serial.print("0x");
+//     if ((publicKey[i] >> 4) == 0)
+//       Serial.print("0"); // print preceeding high nibble if it's zero
+//     Serial.print(publicKey[i], HEX);
+//     if (i != 63)
+//       Serial.print(", ");
+//     if ((31 - i) % 16 == 0)
+//       Serial.println();
+//   }
+//   Serial.println("};");
+// }
+// void printSignature()
+// {
+//   Serial.println("byte signature[64] = {");
+//   for (int i = 0; i < sizeof(signature); i++)
+//   {
+//     Serial.print("0x");
+//     if ((signature[i] >> 4) == 0)
+//       Serial.print("0"); // print preceeding high nibble if it's zero
+//     Serial.print(signature[i], HEX);
+//     if (i != 63)
+//       Serial.print(", ");
+//     if ((31 - i) % 16 == 0)
+//       Serial.println();
+//   }
+//   Serial.println("};");
+// }
+// void setup()
+// {
+//   Serial.begin(9600);
+//   while (!Serial);
+//   ECCX08.begin();
+//   String serialNumber = ECCX08.serialNumber();
+//   Serial.print("ECCX08 Serial Number = ");
+//   Serial.println(serialNumber);
+
+//   ECCX08.ecSign(0, message, signature);
+//   ECCX08.generatePublicKey(0, publicKey);
+//   printMessage();
+//   printPublicKey();
+//   printSignature();
+// }
+// void loop()
+// {
+// }
+
+// #include <ArduinoECCX08.h>
+// #include <ArduinoBearSSL.h>
+// #include <utility/ECCX08CSR.h>
+// #include <utility/ECCX08JWS.h>
+
+// // // byte signature[64];
+// // // byte digest[32];
+
+// byte message[32] = {
+// 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
+// 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
+// };
+
+// byte publicKey[64] = {
+// 0x98, 0x59, 0xFE, 0x69, 0x8D, 0x69, 0x82, 0x05, 0xEB, 0x3C, 0xCA, 0x40, 0x09, 0xC5, 0x4D, 0xA5,
+// 0x01, 0xC1, 0xF9, 0x1E, 0xF5, 0x0B, 0xD3, 0x37, 0x33, 0x8F, 0xE5, 0xCE, 0xE7, 0x24, 0x83, 0xC6,
+// 0x82, 0x93, 0x0A, 0x9D, 0x13, 0xAE, 0x27, 0x3B, 0xB9, 0x96, 0x3E, 0xD7, 0x82, 0x0F, 0xD7, 0xE7,
+// 0xFD, 0x40, 0x9E, 0x40, 0x75, 0x6B, 0x15, 0xF2, 0x28, 0x35, 0x5C, 0x5F, 0x4D, 0x84, 0x51, 0x2D
+// };
+
+// byte signature[64] = {
+// 0x8E, 0xB2, 0x5C, 0xE7, 0x7A, 0x1A, 0x2B, 0x87, 0xF7, 0x37, 0x30, 0x6A, 0x2F, 0xA9, 0xE5, 0x70,
+// 0x14, 0x52, 0x7B, 0x0D, 0x36, 0xED, 0xD7, 0xB0, 0x7B, 0xA4, 0x60, 0x7F, 0xF0, 0xB9, 0xEF, 0x30,
+// 0x8B, 0x9D, 0x0C, 0x69, 0x40, 0x10, 0x8D, 0xC3, 0x5B, 0x9E, 0x83, 0x07, 0x2F, 0x55, 0x65, 0xF0,
+// 0x83, 0x82, 0x95, 0xBB, 0x95, 0x03, 0x76, 0x31, 0x24, 0x16, 0xED, 0x98, 0x16, 0xB4, 0x9E, 0xC3
+// };
+
+// void setup()
+// {
+//   Serial.begin(9600);
+//   while (!Serial);
+//   ECCX08.begin(0x35);
+//   String serialNumber = ECCX08.serialNumber();
+//   Serial.print("ECCX08 Serial Number = ");
+//   Serial.println(serialNumber);
+
+//   if(ECCX08.ecdsaVerify(message, signature, publicKey))
+//   {
+//     Serial.println("Signature Verified");
+//   }
+//   else
+//   {
+//     Serial.println("Signature Failed");
+//   }
+// }
+
+// void loop()
+// {
+// }
